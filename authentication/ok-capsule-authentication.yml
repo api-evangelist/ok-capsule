@@ -1,0 +1,84 @@
+generated: '2026-08-26'
+method: searched
+source: https://docs.okcapsule.app/docs/getting-started
+sources:
+- https://docs.okcapsule.app/docs/getting-started
+- https://docs.okcapsule.app/docs/recipes/troubleshooting
+- https://okcapsule.com/mcp/developers
+- https://storefront.okcapsule.app/.well-known/oauth-authorization-server
+- openapi/ok-capsule-core-api-v2-openapi.yaml
+summary:
+  types:
+  - http
+  - oauth2
+  note: >-
+    OK Capsule runs two independent auth models on two surfaces. The REST Core API V2 uses a
+    username/password token exchange returning a bearer JWT. The MCP server uses OAuth 2.1
+    authorization-code with PKCE and dynamic client registration. They do not share credentials.
+surfaces:
+- surface: REST Core API V2
+  base_url: https://na1-prod.okcapsule.app
+  scheme: bearerAuth
+  type: http
+  http_scheme: bearer
+  bearer_format: JWT
+  token_endpoint: POST /v2/authentication/token
+  token_request: '{"username": "<email>", "password": "<password>"}'
+  token_response_fields: [access_token, refresh_token, expires_in]
+  access_token_ttl: 24 hours (expires_in 86400)
+  refresh: 'POST /v2/authentication/refresh-token with {"refresh_token": "..."}'
+  header: 'Authorization: Bearer <access_token>'
+  credential_issuance: >-
+    Not self-serve. Account and brand (Product Line) setup must be complete, then credentials are
+    obtained from an OK Capsule representative.
+  other_auth_operations:
+  - POST /v2/authentication/forgot-password
+  - POST /v2/authentication/reset-password
+  - GET /v2/authentication/user
+  permissions: >-
+    Role-based, managed in the client portal. A 403 means the signed-in user's role lacks the required
+    permission; there are no OAuth scopes on this surface.
+  environment_isolation: >-
+    Users and data are environment-specific. Stage credentials do not work in Production.
+  documented_token_hygiene:
+  - Store tokens in secure encrypted storage; server-side only, never client-side.
+  - Never commit or log tokens.
+  - Refresh proactively at roughly 80% of TTL; the docs ship a TokenManager example that refreshes with 5 minutes remaining.
+  - Invalidate tokens on logout or credential change.
+  - Never share tokens between stage and production.
+- surface: MCP server
+  base_url: https://storefront.okcapsule.app/mcp
+  type: oauth2
+  model: OAuth 2.1 authorization_code + PKCE
+  pkce: S256 mandatory
+  client_type: public - no client secrets are issued
+  dynamic_client_registration: true
+  grant_types: [authorization_code, refresh_token]
+  machine_to_machine: false
+  login: staff email one-time code - no passwords, no API keys, no anonymous access
+  access_token: RS256 JWT, 1 hour
+  access_token_claims: [sub, role, email, tenant_id, tenant_slug, scope, iss, aud, jti, iat, exp]
+  refresh_token: 30 days, single-use, rotating — always persist the newest
+  revocation: POST /oauth/revoke, immediate
+  redirect_uri_policy: 'https, with the usual localhost loopback exception'
+  tenancy: 'one token is bound to exactly one workspace; no token crosses workspaces'
+  scopes: scopes/ok-capsule-scopes.yml
+  discovery:
+  - https://storefront.okcapsule.app/.well-known/oauth-authorization-server
+  - https://storefront.okcapsule.app/.well-known/oauth-protected-resource
+  challenge: >-
+    An unauthenticated request returns HTTP 401 with a WWW-Authenticate Bearer challenge carrying
+    resource_metadata, per RFC 9728, which a conformant MCP client follows automatically into dynamic
+    registration and browser sign-in.
+schemes:
+- name: bearerAuth
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  sources:
+  - openapi/ok-capsule-core-api-v2-openapi.yaml
+- name: mcp-oauth2
+  type: oauth2
+  flow: authorizationCode
+  sources:
+  - https://storefront.okcapsule.app/.well-known/oauth-authorization-server

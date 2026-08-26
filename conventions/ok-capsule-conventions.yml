@@ -1,0 +1,170 @@
+generated: '2026-08-26'
+method: searched
+source: >-
+  https://docs.okcapsule.app/docs/getting-started,
+  https://docs.okcapsule.app/docs/recipes/error-handling,
+  https://docs.okcapsule.app/docs/recipes/order-lifecycle,
+  https://docs.okcapsule.app/docs/recipes/troubleshooting,
+  https://okcapsule.com/mcp/developers, openapi/ok-capsule-core-api-v2-openapi.yaml
+auth:
+  rest: Bearer JWT from POST /v2/authentication/token (username + password), 24h TTL, refresh via POST /v2/authentication/refresh-token
+  mcp: OAuth 2.1 authorization_code + PKCE S256, staff email one-time code, 1h access JWT, 30-day rotating refresh
+  detail: authentication/ok-capsule-authentication.yml
+versioning:
+  style: path
+  current: /v2/
+  required: true
+  note: An unversioned path on the API host returns HTTP 400 "API version is incorrect or not specified".
+  detail: lifecycle/ok-capsule-lifecycle.yml
+media_type:
+  request: application/json
+  response: application/json
+  note: All 300 declared response bodies in the contract are application/json. No alternative representations.
+identifiers:
+  style: uuid
+  note: >-
+    Every resource id is a UUID (format uuid in the schemas, example
+    d290f1ee-6c54-4b01-90e6-d701748f0851). There are no typed id prefixes. Orders additionally carry a
+    caller-supplied `clientCustomOrderId` retrievable via GET
+    /v2/orders/by-client-order-id/{clientCustomOrderId} (getOrderByClientCustomId) - the closest thing
+    the API has to a client-side correlation key.
+timestamps:
+  style: RFC 3339 / ISO 8601 UTC
+  fields: [created_at, updated_at]
+  note: created_at and updated_at are readOnly on every resource, example 2023-03-20T09:12:28Z.
+pagination:
+  declared_in_spec: false
+  documented: partial
+  style: undocumented
+  evidence: >-
+    No pagination parameter is declared on any of the 199 operations. The order-lifecycle recipe
+    demonstrates `limit=50` and `filter[status]=Shipped` / `filter[updated_at][gte]=<iso>` query
+    strings on GET /v2/orders, but neither the parameters nor a next-page cursor or total-count field
+    appear in the contract. There is a parallel `/count` operation on most collections
+    (getOrderTotalCount, getConsumerTotalCount, getFulfillmentTotalCount, ...) returning a Count
+    schema, which is how a caller is expected to size a collection.
+  gap: >-
+    An agent generating a client from the OpenAPI cannot page a collection at all. This is the single
+    largest machine-readability gap in the contract.
+filtering:
+  free_text: q query parameter, present on 97 operations
+  structured: 'filter[field]=value and filter[field][op]=value, demonstrated in the docs but not declared in the spec'
+sorting:
+  documented: false
+field_expansion:
+  supported: false
+sparse_fieldsets:
+  supported: false
+metadata:
+  supported: partial
+  note: Orders carry a free-text `note` field, which the platform also writes back to on Needs Changes. There is no general key/value metadata bag.
+request_id_tracing:
+  header: null
+  documented: false
+  note: >-
+    No correlation or request-id header is declared or documented. The error-handling recipe advises
+    "Log request/response - include correlation IDs for support tickets", but the API does not issue
+    one, so the caller must generate and retain it themselves. Support escalation asks for the request
+    URL, body, full error response and timestamp instead.
+error_envelope:
+  rfc9457: false
+  shapes: 3
+  detail: errors/ok-capsule-problem-types.yml
+  note: The OpenAPI declares ErrorModel and ValidationError; the docs demonstrate a third {statusCode,error,message,details[]} shape. They disagree.
+rate_limit_signaling:
+  headers: [X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After]
+  exhaustion_status: 429
+  detail: rate-limits/ok-capsule-rate-limits.yml
+idempotency:
+  supported: false
+  status: absent
+  header: null
+  evidence: >-
+    The string "idempoten" appears nowhere in the 540KB OpenAPI or in any published documentation page.
+    No idempotency key header is defined on any of the 69 write operations, and the docs' retry guidance
+    (blind exponential backoff on 429, and automatic retry of createOrder after a 401 refresh) will
+    double-fire a real order if the first request in fact succeeded.
+  consequence: >-
+    This is a physical-fulfillment API. A duplicate POST /v2/orders is a second box of supplements
+    manufactured and shipped, and it is chargeable. `clientCustomOrderId` plus
+    getOrderByClientCustomId gives a caller a way to build their own dedupe check before retrying,
+    but it is a read-then-write race, not idempotency.
+  na: false
+dry_run_mode:
+  supported: false
+  status: absent
+  note: >-
+    No preview, validate-only or dry-run flag exists on any write operation. The nearest published
+    substitutes are the stage environment (na1-stage.okcapsule.app, no real shipments) and, on the MCP
+    surface, okc_validate_recommendation - which validates a supplement recommendation, not a
+    prospective order.
+reversibility:
+  status: verified
+  grade: verified
+  note: >-
+    Order cancellation is a genuine reversal with a hard, published, time-bounded window - and the
+    window is stated in wall-clock terms, not vaguely. Consumer deletion is reversible-in-effect only
+    at the MCP layer, via a mandatory confirmation gate rather than an undo.
+  write_surfaces:
+  - surface: Order creation
+    create: createOrder (POST /v2/orders)
+    reversal: 'updateOrder (PUT /v2/orders/{id}) with {"status": "Canceled by Client"}'
+    mcp_tool: okc_cancel_order (scope orders:cancel, opt-in)
+    window: >-
+      Only while the order is in Pending or On Hold status. Orders move from Pending to Accepted in the
+      nightly batch at midnight PST, so the practical window is until the next midnight PST after
+      submission. Once Accepted, cancellation requires contacting OK Capsule support. Once In
+      Production, the order cannot be canceled at all.
+    window_source: https://docs.okcapsule.app/docs/recipes/order-lifecycle
+    grade: verified
+    confirmation: >-
+      On the MCP surface okc_cancel_order is destructive and requires a second explicit step via
+      okc_confirm_pending_action.
+  - surface: Order modification
+    update: updateOrder (PUT /v2/orders/{id})
+    reversal: re-issue updateOrder with the prior values
+    window: >-
+      Same window as cancellation - Pending or On Hold only. Editable fields are shipping_address,
+      consumer, order_lines, email, phone_number, note and a restricted status transition. total,
+      discount_total, fulfillment_fee_total, shipping_fee_total, state, submission_date, source and
+      crm_id are read-only to clients. Updating may itself push the order to On Hold if the change
+      needs review.
+    window_source: https://docs.okcapsule.app/docs/recipes/order-lifecycle
+    grade: verified
+  - surface: Consumer deletion
+    delete: deleteConsumer (DELETE /v2/consumers/{id})
+    mcp_tool: okc_delete_consumer (scope consumers:delete, opt-in)
+    reversal: none published
+    window: null
+    grade: none
+    note: >-
+      No restore, undelete or soft-delete retention period is documented. The only protection is
+      preventive: the scope is opt-in and the MCP tool requires okc_confirm_pending_action before it
+      fires. An agent should treat consumer deletion as permanent.
+  - surface: Consumer / address / contact / product writes
+    reversal: re-issue the corresponding PUT with prior values
+    window: unbounded
+    grade: documented
+    note: Ordinary mutable records; there is no versioning or history endpoint to restore from, so the caller must hold the prior state.
+  read_only: false
+  audit_trail:
+    operations: [listOrderTransactionLogs, oneOrderTransactionLogs]
+    mcp_tool: okc_list_order_transaction_logs
+    note: >-
+      /v2/order-transaction-logs gives an order event history, which is what an agent would read to
+      establish what actually happened before or after a reversal attempt.
+consequence_signals:
+  destructive_tools_gated: >-
+    On the MCP surface, orders:cancel and consumers:delete are opt-in scopes excluded from the default
+    grant, and both backing tools require okc_confirm_pending_action. This is a genuine two-layer
+    consequence control and it is unusually well built for a provider of this size.
+  physical_consequence: >-
+    Writes on this API manufacture and ship physical goods and bill for them. There is no test mode on
+    production; the separation is by environment (na1-stage vs na1-prod), not by key prefix.
+cross_references:
+  errors: errors/ok-capsule-problem-types.yml
+  lifecycle: lifecycle/ok-capsule-lifecycle.yml
+  authentication: authentication/ok-capsule-authentication.yml
+  scopes: scopes/ok-capsule-scopes.yml
+  rate_limits: rate-limits/ok-capsule-rate-limits.yml
+  sandbox: sandbox/ok-capsule-sandbox.yml

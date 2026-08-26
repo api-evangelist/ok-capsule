@@ -1,0 +1,113 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the OK Capsule Core API V2
+  version: 1.0.0
+extends: ../openapi/ok-capsule-core-api-v2-openapi.yaml
+x-generated: '2026-08-26'
+x-method: generated
+x-source: >-
+  Derived from the provider's own published documentation
+  (https://docs.okcapsule.app/docs/getting-started, /docs/recipes/error-handling,
+  /docs/recipes/order-lifecycle, /docs/recipes/troubleshooting) and from live probes recorded in this
+  repo. Every action below adds information the provider states elsewhere but does not carry in the
+  contract. The original spec is never mutated.
+actions:
+- target: $.info
+  description: Record the source of truth and the provider's own stability statement about this surface.
+  update:
+    x-spec-source: https://okc-bucket-open-api-docs-prod.s3.us-west-2.amazonaws.com/okc-open-api-v2.dist.yaml
+    x-spec-rendered-at: https://api2-docs.okcapsule.app/
+    x-stability: >-
+      The provider states at https://okcapsule.com/mcp/developers that "The MCP tools are the supported
+      contract. The underlying REST endpoints are reference-only and can change without notice."
+    x-agent-surface: https://storefront.okcapsule.app/mcp
+- target: $.info
+  description: Flag the three documented cross-cutting behaviours that the contract omits entirely.
+  update:
+    x-idempotency: >-
+      Not supported. No idempotency key header exists on any write operation. A duplicate POST /v2/orders
+      manufactures and ships a second physical order. Use client_custom_order_id plus
+      getOrderByClientCustomId to build a caller-side dedupe check before retrying.
+    x-pagination: >-
+      Not declared in this contract. The docs demonstrate limit and filter[field][op] query strings on
+      /v2/orders; per-collection /count operations return totals.
+    x-rate-limit-headers: [X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After]
+- target: $.servers
+  description: Label the environments with their real-world effect, per the Environments table in info.description.
+  update:
+  - url: https://na1-prod.okcapsule.app
+    description: Production environment
+    x-environment: production
+    x-effects: Real fulfillment and shipping. Orders placed here are manufactured and billed.
+  - url: https://na1-stage.okcapsule.app
+    description: Stage/Testing environment
+    x-environment: stage
+    x-effects: Test data only, no real shipments. Credentials are not interchangeable with production.
+- target: $.paths['/v2/orders'].post
+  description: >-
+    createOrder is the highest-consequence operation in the API. Record its consequence class, its
+    reversal path and the exact window in which the reversal works.
+  update:
+    x-consequence: high
+    x-side-effects: Manufactures and ships physical goods; chargeable per plans/ok-capsule-plans-pricing.yml.
+    x-idempotent: false
+    x-reversal:
+      operation: updateOrder
+      request: 'PUT /v2/orders/{id} with {"status": "Canceled by Client"}'
+      window: >-
+        Only while the order is in Pending or On Hold. Orders move to Accepted in the nightly batch at
+        midnight PST; after that, cancellation requires contacting OK Capsule support, and once In
+        Production the order cannot be canceled at all.
+      source: https://docs.okcapsule.app/docs/recipes/order-lifecycle
+    x-prerequisites:
+    - An active Packaging Asset Group must be configured for the product line, or the order lands in Needs Changes.
+    - Every referenced client product and its underlying OKC product must be active.
+    - Each pouch must carry either pack_id or contents, never both.
+- target: $.paths['/v2/orders/{id}'].put
+  description: Record the edit window and the fields the platform treats as read-only.
+  update:
+    x-edit-window: Pending or On Hold only. Orders become immutable once Accepted.
+    x-read-only-fields: [total, discount_total, fulfillment_fee_total, shipping_fee_total, state, submission_date, source, crm_id]
+    x-cancel-transition: 'status may be set to Pending, On Hold or "Canceled by Client" only'
+    x-side-effect: An update may itself move the order to On Hold when the change requires review, e.g. address validation.
+    x-source: https://docs.okcapsule.app/docs/recipes/order-lifecycle
+- target: $.paths['/v2/orders/{id}'].delete
+  description: Note that the documented cancellation path is a status update, not this DELETE.
+  update:
+    x-note: >-
+      The provider's own documented cancellation flow is PUT /v2/orders/{id} with status
+      "Canceled by Client", not this DELETE. Prefer the documented path.
+- target: $.paths['/v2/consumers/{id}'].delete
+  description: Mark consumer deletion as irreversible.
+  update:
+    x-consequence: high
+    x-reversal: none published
+    x-note: >-
+      No restore, undelete or retention window is documented. On the MCP surface the equivalent tool
+      okc_delete_consumer sits behind an opt-in consumers:delete scope and requires a second
+      confirmation via okc_confirm_pending_action.
+- target: $.paths['/v2/authentication/token'].post
+  description: The auth operations carry no operationId in the source spec; record stable names and the token contract.
+  update:
+    operationId: createAuthenticationToken
+    x-token-ttl: 24 hours (expires_in 86400)
+    x-refresh-operation: POST /v2/authentication/refresh-token
+    x-credential-issuance: Not self-serve; issued by an OK Capsule representative after account and brand setup.
+- target: $.paths['/v2/authentication/refresh-token'].post
+  description: Stable operationId for the refresh exchange.
+  update:
+    operationId: refreshAuthenticationToken
+- target: $.paths['/v2/authentication/forgot-password'].post
+  update:
+    operationId: forgotPassword
+- target: $.paths['/v2/authentication/reset-password'].post
+  update:
+    operationId: resetPassword
+- target: $.paths['/v2/authentication/user'].get
+  update:
+    operationId: getAuthenticatedUser
+- target: $.components.schemas.UpcCode
+  description: Name the domain standard this schema implements.
+  update:
+    x-domain-standard: GS1 UPC / GTIN
+    x-note: The `upc` field carries a GS1 UPC-A product identifier (example 012345678905), the retail identification standard for this category.

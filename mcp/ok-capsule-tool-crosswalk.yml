@@ -1,0 +1,209 @@
+generated: '2026-08-26'
+method: derived
+source: >-
+  mcp/ok-capsule-mcp.yml (tool list published at https://okcapsule.com/mcp/developers) bound against
+  openapi/ok-capsule-core-api-v2-openapi.yaml
+note: >-
+  The live MCP tools/list is auth-gated (HTTP 401, RFC 9728 challenge), so tool input schemas were not
+  observed. Bindings below are by name and published purpose against verified operationIds in the
+  OpenAPI, with confidence set accordingly. Where an operationId is named, it exists in the spec.
+  IMPORTANT for anyone using this crosswalk to plan an integration: OK Capsule states the MCP tools are
+  the supported contract and the REST endpoints are reference-only and can change without notice, so
+  the REST column is an explanation of the tool, not an alternative to it.
+surfaces:
+  openapi:
+    file: openapi/ok-capsule-core-api-v2-openapi.yaml
+    servers:
+    - https://na1-prod.okcapsule.app
+    - https://na1-stage.okcapsule.app
+    operations: 199
+    gated: credentials issued by an OK Capsule representative after account and brand setup
+  mcp:
+    url: https://storefront.okcapsule.app/mcp
+    gated: true
+    gate: OAuth 2.1 + PKCE, staff email one-time code; tools/list returns 401 anonymously
+  graphql: null
+coverage:
+  mcp_tools: 27
+  mapped_to_rest: 18
+  mcp_only: 9
+  rest_operations: 199
+  rest_operations_covered: 21
+  rest_only_estimate: 178
+crosswalk:
+- tool: okc_list_brands
+  category: catalog
+  rest: [listProductLines]
+  binding: direct
+  confidence: high
+  note: OK Capsule's docs use "brand" and "Product Line" interchangeably; /v2/product-lines is the brand resource.
+- tool: okc_list_products
+  category: catalog
+  rest: [listProducts]
+  binding: direct
+  confidence: high
+- tool: okc_get_catalog
+  category: catalog
+  rest: [listProducts, listOkcProducts]
+  binding: composite
+  confidence: medium
+  note: >-
+    A full catalog view spans the client's own products and the OK Capsule master formulary.
+- tool: okc_render_pack_builder
+  category: catalog
+  rest: [getPackBuilderWidget, getPackBuilderWidgetProducts, getPackBuilderWidgetCategories, getPackBuilderWidgetCategoriesProducts]
+  binding: composite
+  confidence: medium
+  note: The REST widget endpoints return the same pack-builder payload the MCP renders as an embedded UI card.
+- tool: okc_pack_builder_url
+  category: catalog
+  rest: [getPackBuilderWidget]
+  binding: composite
+  confidence: low
+  note: No REST operation returns a shareable link; the closest surface is the widget endpoint the link would open.
+- tool: okc_list_statuses
+  category: meta
+  rest: [listStatuses]
+  binding: direct
+  confidence: high
+- tool: okc_generate_supplement_facts_pdf
+  category: documents
+  rest: [getPubSpec, getPamphlet]
+  binding: composite
+  confidence: medium
+  note: /v2/pub-specs/{orderLineId}/{type}/{format} serves pdf and html publication specs; /v2/pamphlets/{orderLineId} serves the pamphlet URL.
+- tool: okc_get_consumer
+  category: consumers
+  rest: [getConsumer]
+  binding: direct
+  confidence: high
+- tool: okc_list_consumers
+  category: consumers
+  rest: [listConsumers]
+  binding: direct
+  confidence: high
+- tool: okc_upsert_consumer
+  category: consumers
+  rest: [createConsumer, updateConsumer]
+  binding: composite
+  confidence: high
+  note: Upsert collapses POST /v2/consumers and PUT /v2/consumers/{id} into one tool.
+- tool: okc_delete_consumer
+  category: consumers
+  rest: [deleteConsumer]
+  binding: direct
+  confidence: high
+- tool: okc_list_orders
+  category: orders
+  rest: [listOrders]
+  binding: direct
+  confidence: high
+- tool: okc_get_order
+  category: orders
+  rest: [getOrder]
+  binding: direct
+  confidence: high
+- tool: okc_get_order_by_client_id
+  category: orders
+  rest: [getOrderByClientCustomId]
+  binding: direct
+  confidence: high
+- tool: okc_list_order_transaction_logs
+  category: orders
+  rest: [listOrderTransactionLogs]
+  binding: direct
+  confidence: high
+- tool: okc_render_order_status
+  category: orders
+  rest: [getOrder]
+  binding: direct
+  confidence: medium
+  note: Same data as getOrder, rendered as an embedded UI card.
+- tool: okc_create_order
+  category: orders
+  rest: [createOrder]
+  binding: direct
+  confidence: high
+- tool: okc_update_order
+  category: orders
+  rest: [updateOrder]
+  binding: direct
+  confidence: high
+- tool: okc_cancel_order
+  category: orders
+  rest: [updateOrder]
+  binding: composite
+  confidence: high
+  note: >-
+    There is no DELETE-style cancel in REST. The documented cancel is PUT /v2/orders/{id} with
+    {"status":"Canceled by Client"}, and it only succeeds while the order is Pending or On Hold.
+- tool: okc_list_fulfillments
+  category: fulfillments
+  rest: [listFulfillments]
+  binding: direct
+  confidence: high
+- tool: okc_get_fulfillment
+  category: fulfillments
+  rest: [getFulfillment]
+  binding: direct
+  confidence: high
+- tool: okc_get_shipping_label
+  category: fulfillments
+  rest: [getFulfillmentLabelUrl]
+  binding: direct
+  confidence: high
+mcp_only:
+- tool: okc_authenticate
+  reason: >-
+    MCP session establishment over OAuth 2.1. The REST equivalent is a different auth model entirely —
+    POST /v2/authentication/token with username and password (no operationId in the spec).
+- tool: okc_debug_ping
+  reason: No REST health or ping operation is published.
+- tool: okc_confirm_pending_action
+  reason: >-
+    A protocol-level two-step confirmation gate for destructive tools. REST has no equivalent; the REST
+    surface simply rejects a cancel or delete once the order has moved past Pending/On Hold.
+- tool: okc_get_product_intelligence
+  reason: >-
+    Ingredient and product intelligence has no public REST operation. getProduct and getOkcProduct
+    return catalog records, not the interaction/claims intelligence the tool describes.
+- tool: okc_validate_recommendation
+  reason: >-
+    Supplement recommendation validation has no REST counterpart; it appears to be an MCP-native
+    capability built for the agent surface.
+rest_only:
+  note: >-
+    178 of 199 REST operations have no MCP tool. The largest untouched groups are listed here rather
+    than enumerated one by one; they are administrative, onboarding and back-office surfaces that OK
+    Capsule has deliberately not exposed to agents.
+  groups:
+  - group: Clients + Client Addresses
+    operations: [createClient, listClients, getClient, updateClient, deleteClient, createClientAddress, listClientAddresses, getClientAddress, updateClientAddress, deleteClientAddress, getAddressTotalCount]
+  - group: Consumer + Contact Addresses
+    operations: [createConsumerAddress, listConsumerAddresses, getConsumerAddress, updateConsumerAddress, deleteConsumerAddress, createContact, listContacts, getContact, updateContact, deleteContact, createContactAddress, listContactAddresses, getContactAddress, updateContactAddress, deleteContactAddress]
+  - group: Assemblies
+    operations: [createAssembly, listAssemblies, getAssembly, updateAssembly, deleteAssembly, listInternalAssemblies, getAssemblyTotalCount]
+  - group: Batches + Billings
+    operations: [createBatch, listBatches, getBatch, updateBatch, deleteBatch, createBilling, listBillings, getBilling, updateBilling, deleteBilling]
+  - group: Product Lines + Packaging Asset Groups
+    operations: [createProductLine, getProductLine, updateProductLine, deleteProductLine, getPackagingAssetGroupProductLine, createPackagingAssetGroup, listPackagingAssetGroup, getPackagingAssetGroup, updatePackagingAssetGroup, deletePackagingAssetGroup]
+  - group: OKC Products + Products write surface
+    operations: [createOkcProduct, getOkcProduct, updateOkcProduct, deleteOkcProduct, createProduct, getProduct, updateProduct, deleteProduct]
+  - group: Product Sets
+    operations: [createClientProductSet, searchClientProductSets, getClientProductSet, updateClientProductSet, deleteClientProductSet, getClientProductSetItem, deleteClientProductSetItem]
+  - group: Pack Builder administration
+    operations: [createPackBuilder, listPackBuilders, getPackBuilder, updatePackBuilder, deletePackBuilder, connectPackBuilder, disconnectPackBuilder, createPackBuilderSettings, listPackBuildersSettings, updatePackBuilderSettings, deletePackBuilderSettings, createPackBuilderProduct, listPackBuildersProducts, deletePackBuilderProduct, createMultiplePackBuilderProduct, createCategory, listCategories, updateCategory, deleteCategory, addProductsToCategory, removeProductFromCategory]
+  - group: Users
+    operations: [createUser, listUsers, getUser, updateUser, deleteUser, getUserTotalCount]
+  - group: Onboarding
+    operations: [onboardingSignUp, onboardingConfirm, onboardingResendCode, onboardingAddAddress]
+  - group: UPC Codes
+    operations: [listUpcCodes, createUpcCode, getUpcCode, updateUpcCode, deleteUpcCode, attachOkcProductToUpcCode, detachOkcProductFromUpcCode]
+  - group: Telemetry + Sync Processes + Printer Settings
+    operations: [createTelemetry, listCollectTelemetry, collectTelemetry, listSyncProcesses, getSyncProcess, listClientPrinterSettings, createClientPrinterSettings, getClientPrinterSettings, updateClientPrinterSettings, deleteClientPrinterSettings, countClientPrinterSettings, getClientPrinterSettingsByClientAndLabelType]
+  - group: Integrations Orders
+    operations: [createIntegrationOrder, updateIntegrationOrder]
+  - group: Fulfillment write surface
+    operations: [createFulfillment, updateFulfillment, deleteFulfillment, getOrderFulfillments]
+  - group: Order Lines
+    operations: [getOrderLine]

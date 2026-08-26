@@ -1,0 +1,83 @@
+generated: '2026-08-26'
+method: probed
+source: https://storefront.okcapsule.app/.well-known/oauth-authorization-server
+docs: https://okcapsule.com/mcp/developers
+note: >-
+  These scopes govern the MCP server (https://storefront.okcapsule.app/mcp), not the REST Core API V2.
+  The REST API declares a single bearerAuth (http/JWT) securityScheme with no oauth2 flows and
+  therefore has no scope surface; its permissions are role-based and managed in the client portal.
+  The scope list here is read verbatim from the RFC 8414 discovery document (scopes_supported) and
+  cross-checked against the provider's own scope table at https://okcapsule.com/mcp/developers. The
+  provider states the discovery document is authoritative and that "scopes may be added or split", so
+  clients should read it at runtime.
+authorization_server: https://storefront.okcapsule.app
+flows:
+- type: authorization_code
+  authorization_endpoint: https://storefront.okcapsule.app/oauth/authorize
+  token_endpoint: https://storefront.okcapsule.app/oauth/token
+  registration_endpoint: https://storefront.okcapsule.app/oauth/register
+  revocation_endpoint: https://storefront.okcapsule.app/oauth/revoke
+  pkce: required (S256)
+  token_endpoint_auth_methods_supported: [none]
+- type: refresh_token
+scope_count: 16
+scopes:
+- name: catalog:read
+  description: Brands, products, catalog, product intelligence, pack builder
+  default_grant: true
+- name: recommendations:read
+  description: Recommendation validation
+  default_grant: true
+- name: orders:read
+  description: List/get orders, transaction logs, order status
+  default_grant: true
+- name: orders:write
+  description: Create/update orders
+  default_grant: false
+  consent: opt-in
+- name: orders:cancel
+  description: Cancel orders
+  default_grant: false
+  consent: opt-in
+  destructive: true
+- name: consumers:read
+  description: Get/list consumers
+  default_grant: true
+- name: consumers:write
+  description: Create/update consumers
+  default_grant: true
+- name: consumers:delete
+  description: Delete consumers
+  default_grant: false
+  consent: opt-in
+  destructive: true
+- name: fulfillments:read
+  description: Fulfillments, shipping labels
+  default_grant: true
+- name: meta:read
+  description: Status lists
+  default_grant: true
+- name: documents:write
+  description: Supplement-facts PDF generation
+  default_grant: true
+- name: orders:read:own
+  description: >-
+    Present in scopes_supported in the discovery document. The ":own" family is not documented in the
+    provider's published scope table; the developer page states there is no consumer-facing sign-in
+    yet, so these read as reserved for a future consumer persona.
+  default_grant: unknown
+- name: orders:write:own
+  description: Reserved consumer-persona scope present in scopes_supported but not in the published scope table.
+  default_grant: unknown
+- name: orders:cancel:own
+  description: Reserved consumer-persona scope present in scopes_supported but not in the published scope table.
+  default_grant: unknown
+- name: profile:read:own
+  description: Reserved consumer-persona scope present in scopes_supported but not in the published scope table.
+  default_grant: unknown
+- name: profile:write:own
+  description: Reserved consumer-persona scope present in scopes_supported but not in the published scope table.
+  default_grant: unknown
+consent_model: >-
+  Read access is the default grant; anything destructive is opt-in at the consent screen. The user
+  approves exactly what the client asked for, and one token is bound to exactly one workspace.

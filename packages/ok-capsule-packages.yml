@@ -1,0 +1,28 @@
+generated: '2026-08-26'
+method: searched
+source: >-
+  registry.npmjs.org search (okcapsule, ok-capsule), pypi.org/pypi/{okcapsule,ok-capsule}/json,
+  api.github.com/orgs/okcapsule/repos, https://okcapsule.com/mcp/developers,
+  https://docs.okcapsule.app/docs/getting-started
+package_count: 0
+packages: []
+note: >-
+  OK Capsule publishes no first-party client library in any registry. npm search for "okcapsule" and
+  "ok-capsule" returns zero matching packages; PyPI returns 404 for both names; the GitHub organization
+  github.com/okcapsule exists (created 2021-08-10, HTTP 200) but has 0 public repositories, so there is
+  no source-distributed SDK either. The Getting Started guide teaches raw fetch/cURL against
+  https://na1-prod.okcapsule.app and the docs never reference an SDK. This is a deliberate posture
+  rather than a gap: the /mcp/developers page states "The MCP tools are the supported contract. The
+  underlying REST endpoints are reference-only and can change without notice", so the intended client
+  is a conformant MCP host, not a language SDK. Consumers integrate either through the Shopify app,
+  the MCP server, or hand-rolled HTTP.
+registries_checked:
+- registry: npm
+  query: okcapsule / ok-capsule
+  result: no first-party package
+- registry: pypi
+  query: okcapsule / ok-capsule
+  result: 404
+- registry: github
+  query: github.com/okcapsule
+  result: org exists, 0 public repositories

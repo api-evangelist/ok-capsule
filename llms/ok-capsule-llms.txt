@@ -1,0 +1,28 @@
+# OK Capsule
+
+> OK Capsule is an on-demand supplement manufacturing platform. Brands, clinics, and telehealth companies launch personalized supplement packs without minimum orders, inventory, or upfront deposits.
+
+## Pages
+
+- [Home](/): Overview of the OK Capsule platform.
+- [About](/about): Our story, mission, and team.
+- [Solutions](/solutions): Manufacturing-as-a-Service offerings.
+- [How It Works](/solutions/how-it-works): End-to-end fulfillment flow.
+- [Enterprise API](/solutions/api): API integration for telehealth and platforms.
+- [Shopify App](/solutions/shopify): Drop-shipping personalized packs through Shopify.
+- [Packaging](/solutions/packaging): Eco-friendly, patented dispenser packaging.
+- [Case Study](/solutions/case-study): Customer success story.
+- [Supplements Formulary](/supplements): Browse the 60+ ingredient formulary.
+- [Pricing Calculator](/pricing/calculator): Estimate per-pack cost and monthly revenue.
+- [Plans & Features](/pricing/plans): Compare plans side-by-side.
+- [Quality](/quality): cGMP, FDA, ISO 17025 standards and testing.
+- [FAQs](/faqs): Common questions about the platform.
+- [Learn](/learn): Insights on personalized supplements and brand growth.
+- [Blog](/blog): OK Capsule Substack posts and updates.
+- [Contact](/contact): Get in touch with our team.
+
+## Optional
+
+- [Terms & Conditions](/terms)
+- [Privacy Policy](/privacy-policy)
+- [California Privacy](/california-privacy)

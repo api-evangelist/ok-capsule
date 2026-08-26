@@ -1,0 +1,140 @@
+generated: '2026-08-26'
+method: probed
+source: >-
+  live probe of https://api.okcapsule.app (v1) and https://na1-prod.okcapsule.app (v2),
+  https://docs.okcapsule.app/docs/recipes/order-lifecycle, https://okcapsule.com/pricing/plans,
+  https://okcapsule.com/mcp/developers
+versioning:
+  scheme: path
+  pattern: /v{major}/
+  current: v2
+  spec_version: 2.0.0
+  note: >-
+    Version is carried in the URL path. The v2 host also rejects an unversioned path outright -
+    https://na1-prod.okcapsule.app/<anything-not-/v2/> returns HTTP 400 "API version is incorrect or
+    not specified", so the version is mandatory rather than defaulted.
+versions:
+- version: v1
+  status: retired
+  host: https://api.okcapsule.app
+  evidence:
+    probed: '2026-08-26'
+    http_status: 410
+    body: >-
+      {"error":{"errorCode":"OKCAPI_V1_DEPRECATED","message":"We're sorry, but it looks like this
+      endpoint is no longer available. For details on the changes, please visit
+      https://docs.okcapsule.app/docs/category/v1-to-v2-migration-guide or contact us at
+      clientsuccess@okcapsule.com. We're here to help!"}}
+  note: >-
+    This is the good version of a sunset: a real HTTP 410 Gone with a machine-readable errorCode, a
+    human message, a migration-guide link and a named contact - not a silent 404 and not a redirect
+    that quietly changes semantics. Every path on the host returns it uniformly.
+  defect: >-
+    The migration-guide URL the 410 body advertises,
+    https://docs.okcapsule.app/docs/category/v1-to-v2-migration-guide, returns HTTP 404. The one link
+    a stranded v1 caller is told to follow is dead. Worth reporting to the provider.
+- version: v2
+  status: current
+  hosts:
+  - https://na1-prod.okcapsule.app
+  - https://na1-stage.okcapsule.app
+  spec: openapi/ok-capsule-core-api-v2-openapi.yaml
+deprecation_policy:
+  published: partial
+  sunset_header: false
+  deprecation_header: false
+  evidence: >-
+    OK Capsule has demonstrably deprecated and sunset a major version, and returns 410 Gone with a
+    migration pointer, which is more than most providers do. But there is no published policy document
+    stating notice periods, and no RFC 8594 Sunset or Deprecation response headers are declared
+    anywhere in the OpenAPI or observed on live responses, so a client cannot detect an upcoming
+    retirement programmatically - only an already-completed one.
+  contract_stability_statement:
+    source: https://okcapsule.com/mcp/developers
+    text: >-
+      "The MCP tools are the supported contract. The underlying REST endpoints are reference-only and
+      can change without notice."
+    reading: >-
+      This is an explicit no-stability-guarantee on the REST surface. It is unusually candid and it is
+      load-bearing for anyone planning a REST integration: the 199-operation OpenAPI is documentation,
+      not a promise.
+deprecated_operations:
+  count: 0
+  note: 'No operation in the v2 OpenAPI carries a deprecated: true flag.'
+status_page:
+  published: false
+  evidence: >-
+    status.okcapsule.com and status.okcapsule.app do not resolve (DNS failure);
+    https://okcapsule.com/status returns 404. No Statuspage/Instatus/BetterStack property was found.
+  note: No StatusPage pointer is emitted because there is no status page.
+changelog:
+  published: false
+  evidence: >-
+    https://okcapsule.com/changelog, https://docs.okcapsule.app/changelog and
+    https://docs.okcapsule.app/docs/changelog all return 404; the docs sitemap lists 12 URLs and none
+    is a changelog. The only dated content stream is the marketing blog at https://okcapsule.com/blog.
+  note: No ChangeLog pointer is emitted because there is no dated API changelog.
+sla:
+  published: partial
+  source: https://okcapsule.com/pricing/plans
+  terms:
+  - tier: Starter
+    shipping_sla: not included
+    support_response: 72h
+  - tier: Professional
+    shipping_sla: Shipped within 24 business hours
+    support_response: 24h
+  - tier: Enterprise
+    shipping_sla: Shipped within 24 business hours
+    support_response: 8h (Slack)
+  note: >-
+    These are fulfillment and support SLAs on the physical product, not an API uptime SLA. No API
+    availability commitment is published.
+order_lifecycle:
+  source: https://docs.okcapsule.app/docs/recipes/order-lifecycle
+  processing: Orders in Pending are processed and moved to Accepted during a nightly batch at midnight PST.
+  status_update_cadence: Order statuses are typically updated every 6 hours during business operations.
+  statuses:
+  - status: Pending
+    description: Order received, awaiting nightly batch
+    editable: true
+    cancelable: true
+  - status: On Hold
+    description: Paused for review
+    editable: true
+    cancelable: true
+  - status: Accepted
+    description: Validated and queued for production
+    editable: false
+    cancelable: contact support
+  - status: In Production
+    description: Being manufactured
+    editable: false
+    cancelable: false
+  - status: Shipped
+    description: Handed to carrier, tracking available
+    editable: false
+    cancelable: false
+  - status: Delivered
+    description: Confirmed delivery
+    editable: false
+    cancelable: false
+  - status: Canceled by Client
+    description: The client requested cancellation
+  - status: Canceled by OKC
+    description: OK Capsule canceled the order
+  - status: Needs Changes
+    description: 'Validation failed during order processing; check the order note field'
+mcp_lifecycle:
+  source: https://okcapsule.com/mcp/developers
+  stable:
+  - The protocol - OAuth 2.1 + PKCE, Streamable HTTP, MCP
+  - The discovery URLs
+  - The production base URL
+  moving:
+  - Tool schemas - discover at runtime with tools/list, never hardcode
+  - The scope list - "not final and will grow"
+  self_description: >-
+    The provider labels its own developer page "A deliberate snapshot, not a finished spec" and
+    publishes a Known gaps & limitations section. That candour is worth recording as a lifecycle
+    signal in its own right.

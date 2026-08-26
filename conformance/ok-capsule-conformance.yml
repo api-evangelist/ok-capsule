@@ -1,0 +1,119 @@
+generated: '2026-08-26'
+method: searched
+source: >-
+  https://storefront.okcapsule.app/.well-known/oauth-authorization-server,
+  https://storefront.okcapsule.app/.well-known/oauth-protected-resource,
+  https://okcapsule.com/mcp/developers, https://okcapsule.com/quality,
+  openapi/ok-capsule-core-api-v2-openapi.yaml
+standards:
+- id: oauth2
+  conforms: true
+  evidence: >-
+    OAuth 2.1 authorization_code with mandatory PKCE S256 on the MCP server. Observed in the discovery
+    document at /.well-known/oauth-authorization-server: response_types_supported [code],
+    grant_types_supported [authorization_code, refresh_token], code_challenge_methods_supported [S256],
+    token_endpoint_auth_methods_supported [none]. Scope of applicability: the MCP surface only. The REST
+    Core API V2 uses a username/password to bearer-JWT exchange and is NOT OAuth.
+- id: rfc8414
+  name: OAuth 2.0 Authorization Server Metadata
+  conforms: true
+  evidence: HTTP 200 JSON at https://storefront.okcapsule.app/.well-known/oauth-authorization-server carrying issuer, authorization_endpoint, token_endpoint, registration_endpoint, revocation_endpoint, jwks_uri and scopes_supported.
+- id: rfc9728
+  name: OAuth 2.0 Protected Resource Metadata
+  conforms: true
+  evidence: >-
+    HTTP 200 JSON at /.well-known/oauth-protected-resource naming resource
+    https://storefront.okcapsule.app/mcp, and an anonymous POST to the MCP endpoint returns 401 with
+    WWW-Authenticate Bearer carrying realm and resource_metadata. This is the discovery path a
+    conformant MCP client follows automatically.
+- id: rfc7591
+  name: OAuth 2.0 Dynamic Client Registration
+  conforms: true
+  evidence: registration_endpoint https://storefront.okcapsule.app/oauth/register advertised in the discovery document; the provider documents public-client registration with no pre-shared secret.
+- id: rfc7636
+  name: PKCE
+  conforms: true
+  evidence: code_challenge_methods_supported [S256] in the discovery document; the developer page states "PKCE S256 is mandatory."
+- id: mcp
+  name: Model Context Protocol
+  conforms: true
+  evidence: >-
+    Production remote server at https://storefront.okcapsule.app/mcp speaking Streamable HTTP JSON-RPC.
+    A tools/list POST returns a protocol-correct 401 challenge; the server advertises the
+    mcp-protocol-version request header and mcp-session-id response header in its CORS policy.
+- id: oidc
+  conforms: false
+  evidence: /.well-known/openid-configuration returns 404 on every host including storefront.okcapsule.app. The MCP server is an OAuth 2.1 authorization server, not an OpenID Provider.
+- id: rfc9457
+  name: Problem Details for HTTP APIs
+  conforms: false
+  evidence: >-
+    All 300 declared response bodies in the OpenAPI are application/json; none is
+    application/problem+json. The error envelope is a bespoke shape - see
+    errors/ok-capsule-problem-types.yml.
+- id: pagination
+  conforms: false
+  evidence: >-
+    No pagination parameters are declared anywhere in the OpenAPI. The only recurring query parameter
+    is a free-text q filter (97 operations). The docs demonstrate limit and filter[field][op] query
+    strings on /v2/orders, but neither is declared in the contract, so an agent cannot discover them
+    from the spec.
+- id: idempotency
+  conforms: false
+  evidence: The string "idempoten" does not appear in the OpenAPI or anywhere in the published documentation. No idempotency key header is defined on any of the write operations.
+- id: rate_limit_headers
+  conforms: true
+  evidence: >-
+    components.headers in the OpenAPI defines X-RateLimit-Limit ("Request limit per hour"),
+    X-RateLimit-Remaining and X-RateLimit-Reset (UTC date-time). The error-handling recipe documents
+    429 with a Retry-After header. No numeric limit value is published - see
+    rate-limits/ok-capsule-rate-limits.yml.
+- id: hsts
+  conforms: partial
+  evidence: okcapsule.com sets Strict-Transport-Security max-age 31536000; docs.okcapsule.app does not; na1-prod.okcapsule.app returned no HSTS header on probe. See security/ok-capsule-domain-security.yml.
+domain_standards:
+- id: gs1-upc
+  name: GS1 UPC / GTIN product identifier
+  conforms: true
+  evidence: >-
+    The contract carries a first-class UPC resource - /v2/upc-codes with 7 operations
+    (listUpcCodes, createUpcCode, getUpcCode, updateUpcCode, deleteUpcCode,
+    attachOkcProductToUpcCode, detachOkcProductFromUpcCode) and a components.schemas.UpcCode with a
+    required `upc` string (example "012345678905", a 12-digit UPC-A) plus a brand field, attachable to
+    an OKC product. This is the retail product-identification standard for the supplement category, and
+    a buyer who already speaks GS1 can map OK Capsule's catalog to their own without a bespoke
+    connector.
+  spec_location: paths./v2/upc-codes, components.schemas.UpcCode
+- id: dshea-supplement-facts
+  name: US FDA Supplement Facts labeling (21 CFR 101.36)
+  conforms: partial
+  evidence: >-
+    The platform generates Supplement Facts artifacts programmatically - the MCP tool
+    okc_generate_supplement_facts_pdf (documents:write) and the REST publication-spec surface
+    GET /v2/pub-specs/{orderLineId}/{type}/{format} (pdf|html) plus GET /v2/pamphlets/{orderLineId}.
+    OK Capsule markets this as "patent-pending Compliance-as-a-Service" that manages FDA labeling
+    requirements. Marked partial rather than true because the contract does not name the regulation or
+    expose a structured Supplement Facts schema - it returns a rendered document.
+  spec_location: paths./v2/pub-specs/{orderLineId}/{type}/{format}, paths./v2/pamphlets/{orderLineId}
+compliance:
+  note: >-
+    OK Capsule publishes a manufacturing and product-quality compliance program, not an information
+    security certification program. No SOC 2, ISO 27001, PCI DSS, HIPAA or FedRAMP attestation is
+    published anywhere on the site, and no trust center exists (trust.okcapsule.com does not resolve;
+    /trust, /security and /compliance all return 404). The certifications below are real and
+    published, and they are the ones that matter to this market - they are the reason a health brand
+    can put its own name on the pouch.
+  source: https://okcapsule.com/quality
+  certifications:
+  - name: cGMP (current Good Manufacturing Practice)
+    scope: manufacturing facilities; all ingredients sourced from cGMP-certified vendors
+  - name: FDA-registered facility
+    scope: manufacturing
+  - name: ISO 17025
+    scope: accredited third-party labs performing skip-lot potency and purity testing
+  - name: UL verified
+    scope: manufacturing facilities
+  artifacts:
+  - name: Certificate of Analysis (COA)
+    availability: sample COA published on https://okcapsule.com/quality; per-lot COAs available on request
+  infosec_certifications: []

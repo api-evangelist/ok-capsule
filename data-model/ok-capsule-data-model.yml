@@ -1,0 +1,330 @@
+generated: '2026-08-26'
+method: derived
+source: openapi/ok-capsule-core-api-v2-openapi.yaml
+docs: https://docs.okcapsule.app/docs/
+note: >-
+  Derived from the 51 components.schemas in the v2 OpenAPI by walking allOf-composed property sets and
+  reading id-reference fields. The spec uses no $ref-typed properties between resources at all - every
+  relationship is expressed as a flat `<entity>_id` UUID field - so the graph below is reconstructed
+  from naming, cross-checked against the "Core Concepts" table in info.description and the docs. The
+  glossary terms (Client, Consumer, Order, Order Line, Pouch, Fulfillment, Assembly, Product Line, OKC
+  Product, User, Contact) are the provider's own.
+identifiers:
+  style: uuid
+  prefixes: none
+  note: >-
+    No typed id prefixes. Every id is a bare UUID, so an id alone does not tell an agent what kind of
+    thing it points at. Several entities also carry caller-supplied correlation ids
+    (client_custom_order_id, client_custom_consumer_id, client_custom_product_id,
+    client_custom_order_line_id) and an external `crm_id` that appears on 15 of the 51 schemas.
+root_entity: Client
+entities:
+- name: Client
+  route: /v2/clients
+  description: The organization - a business partner submitting orders. The tenancy root; almost every other entity hangs off it.
+  external_ids: [tax_id, stripe_customer_id, crm_account_id, crm_id]
+- name: User
+  route: /v2/users
+  description: An authorized person who accesses the API or portal.
+- name: Contact
+  route: /v2/contacts
+  description: A person associated with a client, managed for communication purposes.
+- name: Address
+  route: /v2/addresses
+  description: A polymorphic address record that can belong to a client, a consumer or a contact.
+- name: Consumer
+  route: /v2/consumers
+  description: The end customer receiving the supplement packs.
+- name: ConsumerAddress
+  route: /v2/consumers/{consumerId}/addresses
+- name: ContactAddress
+  route: /v2/contacts/{contactId}/addresses
+- name: ProductLine
+  route: /v2/product-lines
+  description: A client's marketing brand; appears on the packaging.
+- name: OkcProduct
+  route: /v2/okc-products
+  description: A supplement in the OK Capsule master catalog - what OK Capsule purchases from vendors.
+- name: Product
+  route: /v2/products
+  description: A client product - the client's own catalog entry, mapped onto an OKC product.
+- name: Assembly
+  route: /v2/assemblies
+  description: A client's predefined bundle of products, commonly called a "pack".
+- name: PackagingAssetGroup
+  route: /v2/packaging-asset-groups
+  description: The packaging design (labels, pamphlet, pouch template). An order line requires an Active PAG or it lands in Needs Changes.
+- name: Order
+  route: /v2/orders
+  description: A request for one or more packs to be manufactured and shipped.
+- name: OrderLine
+  route: /v2/order-lines
+  description: A single pack within an order - a duration (e.g. 30 days) of pouches.
+- name: Pouch
+  route: null
+  description: An individual daily packet of supplements. Not addressable as its own resource; it is a nested structure inside an order line.
+- name: Fulfillment
+  route: /v2/fulfillments
+  description: Shipping, tracking and delivery information for an order.
+- name: Batch
+  route: /v2/batches
+  description: A manufacturing batch, linked to a billing record.
+- name: Billing
+  route: /v2/billings
+- name: Status
+  route: /v2/statuses
+  description: The status vocabulary for orders and fulfillments.
+- name: OrderTransactionLogs
+  route: /v2/order-transaction-logs
+  description: Event history for an order. Generic - carries an entity_id rather than a typed order_id.
+- name: PackBuilder
+  route: /v2/pack-builders
+  description: A configured consumer-facing pack-building widget.
+- name: PackBuilderCategory
+  route: /v2/pack-builders/categories
+- name: Cart
+  route: /v2/pack-builders/carts
+  description: A pack-builder cart, which becomes an order.
+- name: ClientProductSetItem
+  route: /v2/product-sets
+- name: UpcCode
+  route: /v2/upc-codes
+  description: A GS1 UPC product identifier, attachable to OKC products.
+- name: SyncProcess
+  route: /v2/sync-processes
+  description: A product-sync run pushing catalog to a destination such as Shopify.
+- name: ClientPrinterSettings
+  route: /v2/client-printer-settings
+- name: Telemetry
+  route: /v2/telemetry
+relationships:
+- from: Client
+  to: User
+  type: has_many
+  via: User.client_id
+- from: Client
+  to: Contact
+  type: has_many
+  via: Contact.client_id
+- from: Client
+  to: Consumer
+  type: has_many
+  via: Consumer.client_id
+- from: Client
+  to: ProductLine
+  type: has_many
+  via: ProductLine.client_id
+- from: Client
+  to: Product
+  type: has_many
+  via: Product.client_id
+- from: Client
+  to: Assembly
+  type: has_many
+  via: Assembly.client_id
+- from: Client
+  to: PackagingAssetGroup
+  type: has_many
+  via: PackagingAssetGroup.client_id
+- from: Client
+  to: Order
+  type: has_many
+  via: Order.client_id
+- from: Client
+  to: Billing
+  type: has_many
+  via: Billing.client_id
+- from: Client
+  to: Batch
+  type: has_many
+  via: Batch.client_id
+- from: Client
+  to: PackBuilder
+  type: has_many
+  via: PackBuilder.client_id
+- from: Client
+  to: Address
+  type: has_many
+  via: Address.client_id
+- from: Client
+  to: Contact
+  type: has_one
+  via: Client.billing_contact_address_id
+  note: Points at an address, not a contact, despite the field name.
+- from: Address
+  to: Consumer
+  type: belongs_to
+  via: Address.consumer_id
+- from: Address
+  to: Contact
+  type: belongs_to
+  via: Address.contact_id
+- from: ConsumerAddress
+  to: Consumer
+  type: belongs_to
+  via: ConsumerAddress.consumer_id
+- from: ContactAddress
+  to: Contact
+  type: belongs_to
+  via: ContactAddress.contact_id
+- from: ProductLine
+  to: Address
+  type: has_one
+  via: ProductLine.address_id
+- from: ProductLine
+  to: PackagingAssetGroup
+  type: has_one
+  via: ProductLine.default_packaging_asset_group_id
+- from: Product
+  to: OkcProduct
+  type: belongs_to
+  via: Product.okc_product_id
+  note: The mapping from a client's branded catalog entry to the OK Capsule master formulary item.
+- from: Product
+  to: ProductLine
+  type: belongs_to
+  via: Product.product_line_id
+- from: Product
+  to: PackagingAssetGroup
+  type: has_one
+  via: Product.packaging_asset_group_id
+- from: Assembly
+  to: ProductLine
+  type: belongs_to
+  via: Assembly.product_line_id
+- from: Assembly
+  to: PackagingAssetGroup
+  type: has_one
+  via: Assembly.packaging_asset_group_id
+- from: Order
+  to: OrderLine
+  type: has_many
+  via: OrderLine.order_id
+- from: Order
+  to: Batch
+  type: belongs_to
+  via: Order.batch_id
+  note: Order also carries batch_ids (plural), so an order can span batches.
+- from: Order
+  to: PackBuilder
+  type: belongs_to
+  via: Order.pack_builder_id
+- from: OrderLine
+  to: Fulfillment
+  type: has_one
+  via: OrderLine.fulfillment_id
+- from: OrderLine
+  to: PackagingAssetGroup
+  type: belongs_to
+  via: OrderLine.packaging_asset_group_id
+- from: OrderLine
+  to: ProductLine
+  type: belongs_to
+  via: OrderLine.product_line_id
+- from: OrderLine
+  to: OrderLine
+  type: has_one
+  via: OrderLine.replacement_order_line_id
+  note: A self-reference used for pack repairs and replacements.
+- from: OrderLine
+  to: ClientProductSetItem
+  type: belongs_to
+  via: OrderLine.set_id
+- from: Fulfillment
+  to: Order
+  type: belongs_to
+  via: Fulfillment.order_id
+- from: Fulfillment
+  to: Consumer
+  type: belongs_to
+  via: Fulfillment.consumer_id
+- from: Fulfillment
+  to: Status
+  type: belongs_to
+  via: Fulfillment.status_id
+- from: Fulfillment
+  to: OkcProduct
+  type: has_one
+  via: Fulfillment.shipper_okc_product_id
+  note: The shipper box is itself an OKC product.
+- from: Batch
+  to: Billing
+  type: belongs_to
+  via: Batch.billing_id
+- from: PackBuilder
+  to: PackagingAssetGroup
+  type: has_one
+  via: PackBuilder.packaging_asset_group_id
+- from: PackBuilder
+  to: PackBuilderSetting
+  type: has_one
+  via: PackBuilderSetting.pack_builder_id
+- from: PackBuilder
+  to: PackBuilderIntegrationSettings
+  type: has_one
+  via: PackBuilderIntegrationSettings.pack_builder_id
+- from: PackBuilder
+  to: Product
+  type: has_many
+  via: PackBuilderProduct.client_product_id
+- from: PackBuilder
+  to: PackBuilderCategory
+  type: has_many
+  via: PackBuilderCategoriesClientProduct.category_id
+- from: PackBuilderCategory
+  to: ProductLine
+  type: belongs_to
+  via: PackBuilderCategory.product_line_id
+- from: PackBuilderProductsMapper
+  to: DestinationProduct
+  type: has_one
+  via: PackBuilderProductsMapper.destination_product_id
+  note: The mapping that lets a Shopify (or other destination) product line up with an OK Capsule client product.
+- from: Cart
+  to: PackBuilder
+  type: belongs_to
+  via: Cart.pack_builder_id
+- from: Cart
+  to: Order
+  type: has_one
+  via: Cart.order_id
+- from: SyncProcess
+  to: PackBuilder
+  type: belongs_to
+  via: SyncProcess.pack_builder_id
+- from: ClientProductSetItem
+  to: Product
+  type: belongs_to
+  via: ClientProductSetItem.client_product_id
+- from: ClientPrinterSettings
+  to: ProductLine
+  type: belongs_to
+  via: ClientPrinterSettings.product_line_id
+- from: OrderTransactionLogs
+  to: Client
+  type: belongs_to
+  via: OrderTransactionLogs.client_id
+- from: UpcCode
+  to: OkcProduct
+  type: has_many
+  via: POST /v2/upc-codes/{id}/okc-products/{okcProductId} (attachOkcProductToUpcCode)
+  note: The only many-to-many in the model expressed as an operation rather than a field.
+external_system_ids:
+  note: >-
+    The model is unusually transparent about the systems behind it, which is useful context for anyone
+    integrating.
+  fields:
+  - field: crm_id
+    on: 15 schemas
+    meaning: correlation id in OK Capsule's CRM
+  - field: stripe_customer_id
+    on: Client
+    meaning: Stripe is the billing processor
+  - field: erp_id
+    on: OkcProduct
+  - field: warehouse_id
+    on: OkcProduct
+  - field: external_fulfillment_id
+    on: Fulfillment
+  - field: shipment_order_id
+    on: Fulfillment

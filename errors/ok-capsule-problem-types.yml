@@ -1,0 +1,217 @@
+generated: '2026-08-26'
+method: searched
+source: https://docs.okcapsule.app/docs/recipes/error-handling
+derived_from: openapi/ok-capsule-core-api-v2-openapi.yaml
+format: bespoke-json
+rfc9457: false
+note: >-
+  Not RFC 9457. All 300 declared response bodies are application/json; none is
+  application/problem+json, and there is no type/title/detail/instance/status quartet. Three distinct
+  error envelopes are in play, which is itself the finding an integrator needs: the OpenAPI declares
+  two (ErrorModel and ValidationError) and the docs demonstrate a third. Titles, causes and
+  remediation below are taken verbatim from the provider's error-handling and troubleshooting recipes.
+envelopes:
+- name: ErrorModel
+  where: openapi components.schemas.ErrorModel — the `default` response on 189 operations
+  shape: '{"error": {"errorCode": "<short programmatic code>", "message": "<human readable>"}, "message": "<top-level, present in some responses>"}'
+  example_code: RESOURCE_NOT_FOUND
+- name: ValidationError
+  where: openapi components.schemas.ValidationError — the 422 response on 83 operations
+  shape: '{"message": "Validation error", "errors": [{"message": "''business_name'' is required", "type": "<Joi validation type>"}]}'
+  note: Server-side validation is Joi; the `type` field is the Joi rule that failed.
+- name: docs-envelope
+  where: https://docs.okcapsule.app/docs/recipes/error-handling
+  shape: '{"statusCode": 422, "error": "Unprocessable Entity", "message": "Validation failed", "details": [{"field": "consumer.email", "message": "\"email\" must be a valid email"}]}'
+  note: >-
+    The docs teach `details[]` with a `field` key; the OpenAPI declares `errors[]` with a `type` key.
+    They are not the same shape. An agent generating a client from the spec will not parse the shape
+    the docs demonstrate, and vice versa. Worth raising with the provider.
+status_codes:
+- code: 200
+  meaning: Success
+  action: Request completed
+  declared_on: 130 operations
+- code: 201
+  meaning: Created
+  action: Resource created
+  declared_on: 38 operations
+- code: 204
+  meaning: No Content
+  action: Delete succeeded
+  declared_on: 31 operations
+- code: 400
+  meaning: Bad Request
+  action: Check request format
+  declared_on: 0 operations
+  note: Documented in the error-handling recipe but never declared in the contract.
+- code: 401
+  meaning: Unauthorized
+  action: Token expired or invalid — refresh with POST /v2/authentication/refresh-token and retry
+  declared_on: 1 operation
+  note: >-
+    Access tokens live 24 hours. Only one of 199 operations declares a 401 response, so a spec-driven
+    client will not generate the refresh path the docs consider mandatory.
+- code: 403
+  meaning: Forbidden
+  action: The signed-in user's role lacks the required permission; an admin must update role permissions in the client portal
+  declared_on: 0 operations
+- code: 404
+  meaning: Not Found
+  action: Resource doesn't exist
+  declared_on: 3 operations
+- code: 422
+  meaning: Validation Error
+  action: Fix request data; read errors[]/details[] for the field-level cause
+  declared_on: 83 operations
+- code: 429
+  meaning: Rate Limited
+  action: Honor Retry-After; the docs prescribe exponential backoff at 1s/2s/4s
+  declared_on: 0 operations
+- code: 500
+  meaning: Server Error
+  action: Retry or contact support
+  declared_on: 0 operations
+problem_types:
+- id: consumer-required
+  status: 422
+  title: '"consumer" is required'
+  cause: Missing consumer object
+  remediation: Add a consumer with either `id` or `first_name` + `last_name`. Do not mix both patterns.
+- id: last-name-required
+  status: 422
+  title: '"last_name" is required'
+  cause: first_name supplied without last_name
+  remediation: When creating a new consumer, include both names.
+- id: consumer-id-not-guid
+  status: 422
+  title: '"id" must be a valid GUID'
+  cause: Invalid consumer ID format
+  remediation: Use a valid UUID.
+- id: consumer-not-found
+  status: 404
+  title: Consumer not found
+  cause: Consumer ID doesn't exist
+  remediation: Verify with GET /v2/consumers/{id} (getConsumer).
+- id: email-invalid
+  status: 422
+  title: '"email" must be a valid email'
+  cause: Invalid email format
+  remediation: Check email syntax.
+- id: phone-too-long
+  status: 422
+  title: '"phone_number" length must be less than or equal to 15'
+  cause: Phone too long
+  remediation: Use E.164 format, e.g. +12125551234.
+- id: shipping-address-required
+  status: 422
+  title: '"shipping_address" is required'
+  cause: Missing address object
+  remediation: Add shipping_address with address1, city and country_name.
+- id: address1-required
+  status: 422
+  title: '"address1" is required'
+  cause: Missing street address
+  remediation: Add address1.
+- id: address1-too-long
+  status: 422
+  title: Address line 1 must be less than 100 characters
+  cause: Address too long
+  remediation: Shorten to 100 characters.
+- id: city-too-long
+  status: 422
+  title: City must be less than 50 characters
+  cause: City name too long
+  remediation: Shorten to 50 characters.
+- id: order-lines-required
+  status: 422
+  title: '"order_lines" is required'
+  cause: Missing order lines
+  remediation: Add an order_lines array with at least one item.
+- id: order-lines-empty
+  status: 422
+  title: '"order_lines" must contain at least 1 items'
+  cause: Empty order lines array
+  remediation: Include at least one order line.
+- id: pouches-required
+  status: 422
+  title: '"pouches" is required'
+  cause: Missing pouches in order line
+  remediation: Add a pouches array to each order line.
+- id: pack-id-or-contents
+  status: 422
+  title: Either pack_id or contents required
+  cause: A pouch supplied neither, or supplied both
+  remediation: Give each pouch either pack_id (an assembly) OR contents (custom). Never both.
+- id: client-product-id-required
+  status: 422
+  title: '"client_product_id" is required'
+  cause: Missing product in pouch contents
+  remediation: Add client_product_id to each content item.
+- id: client-product-id-not-guid
+  status: 422
+  title: '"client_product_id" must be a valid GUID'
+  cause: Product ID is not a UUID
+  remediation: List products with GET /v2/products (listProducts) and copy the exact `id`.
+- id: client-products-inactive
+  status: 422
+  title: 'The following client products are inactive and cannot be ordered: [names]'
+  cause: Product has been deactivated
+  remediation: Only order products where active is true.
+- id: okc-products-inactive
+  status: 422
+  title: 'The following OKC products are inactive and cannot be ordered: [names]'
+  cause: Underlying OK Capsule master product discontinued
+  remediation: Contact OK Capsule support.
+- id: product-not-found
+  status: 404
+  title: Product not found
+  cause: Product ID doesn't exist
+  remediation: Verify with GET /v2/products/{id} (getProduct).
+- id: product-wrong-client
+  status: 403
+  title: Product does not belong to client
+  cause: Referencing another client's product
+  remediation: Use products from your own catalog.
+- id: no-pag-for-order-line
+  status: 422
+  title: No Packaging Asset Group ID found for the order line
+  cause: Packaging Asset Group not configured
+  remediation: Contact OK Capsule — PAGs are configured during onboarding and an order requires an Active PAG.
+- id: pag-not-active
+  status: 422
+  title: Order set to "Needs Changes" status
+  cause: The Packaging Asset Group is not Active
+  remediation: Contact OK Capsule to approve the packaging design; check the order's `note` field for detail.
+- id: order-cannot-be-modified
+  status: 422
+  title: Order cannot be modified
+  cause: Order status is past Pending / On Hold
+  remediation: >-
+    Orders are only editable while Pending or On Hold. They move to Accepted in the nightly batch at
+    midnight PST. Check status with getOrder before attempting an update.
+- id: order-cannot-be-canceled
+  status: 422
+  title: Order cannot be canceled
+  cause: Order already In Production
+  remediation: Self-cancel only works while Pending or On Hold. Once Accepted, contact OK Capsule support; once In Production, cancellation is not possible.
+- id: token-expired
+  status: 401
+  title: Token expired
+  cause: Access token older than 24 hours
+  remediation: POST /v2/authentication/refresh-token with the refresh token, then retry.
+- id: insufficient-permissions
+  status: 403
+  title: Insufficient permissions
+  cause: The user's role lacks the required permission scope
+  remediation: Ask an admin to update role permissions in the client portal.
+- id: rate-limited
+  status: 429
+  title: Too Many Requests
+  cause: Request rate exceeded
+  remediation: Read Retry-After and back off exponentially (1s, 2s, 4s). Cache responses; batch where supported.
+support_escalation:
+  required_fields:
+  - Request URL and method
+  - Request body (sensitive data redacted)
+  - Full error response
+  - Timestamp of the request

@@ -1,0 +1,110 @@
+generated: '2026-08-26'
+method: probed
+source: live GET probes of /.well-known/* on every apis.yml and OpenAPI servers[] host
+note: >-
+  Two real documents are served, both on the MCP host storefront.okcapsule.app: RFC 8414 OAuth
+  Authorization Server Metadata and RFC 9728 OAuth Protected Resource Metadata. A control probe for a
+  nonsense path (/.well-known/zzz-control-probe) returned 404 on that host, so the two 200s are genuine
+  documents and not an SPA catch-all. Every other host answers uniformly for all paths and is recorded
+  as a miss: okcapsule.com and docs.okcapsule.app return an HTML 404 shell, na1-prod/na1-stage return
+  HTTP 400 "API version is incorrect or not specified" for every path including the control, and the
+  retired v1 host api.okcapsule.app returns HTTP 410 OKCAPI_V1_DEPRECATED for every path.
+hit_count: 2
+hosts:
+- host: https://storefront.okcapsule.app
+  documents:
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    file: ok-capsule-oauth-authorization-server.json
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    file: ok-capsule-oauth-protected-resource.json
+  - path: /.well-known/jwks.json
+    status: 200
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+  - path: /.well-known/zzz-control-probe
+    status: 404
+    note: soft-404 control probe — confirms this host does not answer 200 for arbitrary paths
+- host: https://na1-prod.okcapsule.app
+  documents:
+  - path: /.well-known/security.txt
+    status: 400
+  - path: /.well-known/openid-configuration
+    status: 400
+  - path: /.well-known/oauth-authorization-server
+    status: 400
+  - path: /.well-known/oauth-protected-resource
+    status: 400
+  - path: /.well-known/api-catalog
+    status: 400
+  - path: /.well-known/ai-plugin.json
+    status: 400
+  - path: /.well-known/agent-card.json
+    status: 400
+  - path: /.well-known/agent.json
+    status: 400
+  - path: /.well-known/definitely-not-here-control
+    status: 400
+    note: control probe — host returns the same 400 for every path
+- host: https://na1-stage.okcapsule.app
+  documents:
+  - path: /.well-known/security.txt
+    status: 400
+  - path: /.well-known/oauth-authorization-server
+    status: 400
+  - path: /.well-known/api-catalog
+    status: 400
+  - path: /.well-known/agent-card.json
+    status: 400
+  - path: /.well-known/agent.json
+    status: 400
+- host: https://okcapsule.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+- host: https://docs.okcapsule.app
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+- host: https://api.okcapsule.app
+  note: retired v1 host — every path returns HTTP 410 OKCAPI_V1_DEPRECATED
+  documents:
+  - path: /.well-known/security.txt
+    status: 410
+  - path: /.well-known/oauth-authorization-server
+    status: 410
+  - path: /.well-known/agent-card.json
+    status: 410
+  - path: /.well-known/agent.json
+    status: 410

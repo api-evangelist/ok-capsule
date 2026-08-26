@@ -1,23 +1,166 @@
 aid: ok-capsule
 name: OK Capsule
-description: 'OK Capsule is a company surfaced via the API Evangelist harvest backlog (source: secondary-market)
-  and added to the network as a stub for full-pipeline profiling.'
+description: >-
+  OK Capsule is an on-demand, private-label supplement manufacturing and fulfillment platform. Health
+  brands, telehealth providers, clinics and retailers use it to launch personalized daily vitamin packs
+  without minimum order quantities, inventory or upfront deposits. The platform exposes its whole
+  supply chain programmatically: a REST Core API V2 (199 operations across clients, consumers, orders,
+  order lines, fulfillments, assemblies, batches, billings, product lines, pack builders and UPC codes)
+  and a production remote MCP server that publishes the same catalog, pack-building, order and
+  fulfillment surface as OAuth 2.1 scoped tools for Claude, ChatGPT, Gemini and other MCP hosts.
+  Supplements are manufactured in cGMP-certified, FDA-registered facilities and lot-tested by
+  ISO 17025 accredited third-party labs.
+image: https://okcapsule.com/og-preview.png
 url: https://raw.githubusercontent.com/api-evangelist/ok-capsule/refs/heads/main/apis.yml
 x-type: company
 x-source: harvest:secondary-market
-x-tier: stub
-x-tier-reason: harvest
 specificationVersion: '0.20'
 created: '2026-08-26'
 modified: '2026-08-26'
 tags:
-- Company
-apis: []
+- Supplements
+- Nutrition
+- Health
+- Manufacturing
+- Fulfillment
+- Ecommerce
+- Personalization
+- Orders
+- Shipping
+- Agents
+- MCP
+- Telehealth
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
+apis:
+- aid: ok-capsule:ok-capsule-core-api-v2
+  name: OK Capsule Core API V2
+  description: >-
+    The OK Capsule Core API V2 is a REST API that lets a brand programmatically create supplement
+    orders, manage consumers and their addresses, browse the OK Capsule product formulary and its own
+    client product catalog, drive the pack builder widget, and track fulfillment and shipping labels
+    through to delivery. 199 operations across 121 paths, JSON in and out, bearer JWT authentication,
+    with a stage environment mirroring production.
+  humanURL: https://docs.okcapsule.app/docs/
+  baseURL: https://na1-prod.okcapsule.app
+  tags:
+  - Orders
+  - Consumers
+  - Products
+  - Fulfillments
+  - Supplements
+  properties:
+  - type: OpenAPI
+    url: openapi/ok-capsule-core-api-v2-openapi.yaml
+  - type: Documentation
+    url: https://docs.okcapsule.app/docs/
+  - type: APIReference
+    url: https://api2-docs.okcapsule.app/
+  - type: GettingStarted
+    url: https://docs.okcapsule.app/docs/getting-started
+  - type: Overlay
+    url: overlays/ok-capsule-core-api-v2-overlay.yaml
+  - type: ErrorCatalog
+    url: errors/ok-capsule-problem-types.yml
+  - type: DataModel
+    url: data-model/ok-capsule-data-model.yml
+- aid: ok-capsule:ok-capsule-mcp-server
+  name: OK Capsule MCP Server
+  description: >-
+    A production remote MCP server that exposes the OK Capsule platform — catalog, product
+    intelligence, pack builder, recommendation validation, consumers, orders and fulfillments — as
+    OAuth 2.1 scoped tools to any conformant MCP host. Streamable HTTP JSON-RPC, authorization-code
+    plus PKCE with dynamic client registration, no API keys and no machine-to-machine grant: a human
+    staff member signs in with an email one-time code and every token is bound to exactly one
+    workspace.
+  humanURL: https://okcapsule.com/mcp/developers
+  baseURL: https://storefront.okcapsule.app/mcp
+  tags:
+  - MCP
+  - Agents
+  - Orders
+  - Catalog
+  properties:
+  - type: MCPServer
+    url: mcp/ok-capsule-mcp.yml
+  - type: ToolCrosswalk
+    url: mcp/ok-capsule-tool-crosswalk.yml
+  - type: Documentation
+    url: https://okcapsule.com/mcp/developers
+  - type: OAuthScopes
+    url: scopes/ok-capsule-scopes.yml
 common:
 - type: Website
-  url: https://www.nasdaqprivatemarket.com/
+  url: https://okcapsule.com/
+- type: DeveloperPortal
+  url: https://docs.okcapsule.app/docs/
+- type: Documentation
+  url: https://docs.okcapsule.app/docs/
+- type: APIReference
+  url: https://api2-docs.okcapsule.app/
+- type: GettingStarted
+  url: https://docs.okcapsule.app/docs/getting-started
+- type: Support
+  url: https://intercom.help/ok-capsule-918b959a076c/en
+- type: Blog
+  url: https://okcapsule.com/blog
+- type: GitHubOrganization
+  url: https://github.com/okcapsule
+- type: Pricing
+  url: https://okcapsule.com/pricing/plans
+- type: SignUp
+  url: https://portal.okcapsule.app/
+- type: Login
+  url: https://portal.okcapsule.app/
+- type: TermsOfService
+  url: https://okcapsule.com/terms
+- type: PrivacyPolicy
+  url: https://okcapsule.com/privacy-policy
+- type: MCPServer
+  url: https://storefront.okcapsule.app/mcp
+  name: OK Capsule MCP Server
+  description: Production remote MCP server for catalog, pack building, consumers, orders and fulfillments, behind OAuth 2.1 + PKCE.
+- type: Packages
+  url: packages/ok-capsule-packages.yml
+- type: WellKnown
+  url: well-known/ok-capsule-well-known.yml
+- type: LLMsTxt
+  url: llms/ok-capsule-llms.txt
+- type: Conformance
+  url: conformance/ok-capsule-conformance.yml
+- type: Compliance
+  url: conformance/ok-capsule-conformance.yml
+- type: ErrorCatalog
+  url: errors/ok-capsule-problem-types.yml
+- type: Lifecycle
+  url: lifecycle/ok-capsule-lifecycle.yml
+- type: Deprecation
+  url: lifecycle/ok-capsule-lifecycle.yml
+- type: OAuthScopes
+  url: scopes/ok-capsule-scopes.yml
+- type: Authentication
+  url: authentication/ok-capsule-authentication.yml
+- type: DomainSecurity
+  url: security/ok-capsule-domain-security.yml
+- type: Conventions
+  url: conventions/ok-capsule-conventions.yml
+- type: Sandbox
+  url: sandbox/ok-capsule-sandbox.yml
+- type: DataModel
+  url: data-model/ok-capsule-data-model.yml
+- type: Components
+  url: components/ok-capsule-components.yml
+- type: Plans
+  url: plans/ok-capsule-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/ok-capsule-rate-limits.yml
+- type: AgentSkill
+  url: skills/_index.yml
+x-enrichment:
+  date: '2026-08-26'
+  status: enriched
+  artifacts_added: 26
+  pass: local-v1

@@ -1,0 +1,203 @@
+generated: '2026-08-26'
+method: probed
+source: https://okcapsule.com/mcp/developers
+status: live
+name: OK Capsule MCP Server
+description: >-
+  A production remote MCP server that exposes the OK Capsule supplement platform — brands and catalog,
+  product intelligence, the pack builder, recommendation validation, consumers, orders and fulfillments
+  — as OAuth 2.1 scoped tools to any conformant MCP host. OK Capsule markets it as the operating
+  surface for the business: "Run your brand from an AI assistant."
+deployment:
+  mode: remote
+  endpoint: https://storefront.okcapsule.app/mcp
+  auth: oauth
+  verified: probed
+transport:
+  protocol: Streamable HTTP JSON-RPC
+  authorization_header: 'Authorization: Bearer <access token>'
+x-evidence:
+  fetched: '2026-08-26'
+  probe: 'POST https://storefront.okcapsule.app/mcp {"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+  http_status: 401
+  body: '{"error":"missing_bearer","error_description":"401 Unauthorized: missing bearer"}'
+  www_authenticate: >-
+    Bearer realm="https://storefront.okcapsule.app/mcp",
+    resource_metadata="https://storefront.okcapsule.app/.well-known/oauth-protected-resource/mcp"
+  note: >-
+    tools/list is auth-gated and returns an RFC 9728-conformant challenge pointing at the protected
+    resource metadata document, so the live inputSchema for each tool requires an authenticated
+    introspection. The tool list below is the provider's own published catalog from
+    https://okcapsule.com/mcp/developers — names, scopes and purposes are verbatim; input schemas are
+    NOT recorded because they were not observed. OK Capsule explicitly tells integrators to discover
+    them at runtime: "Call tools/list rather than hardcoding schemas."
+discovery:
+  oauth_authorization_server: https://storefront.okcapsule.app/.well-known/oauth-authorization-server
+  oauth_protected_resource: https://storefront.okcapsule.app/.well-known/oauth-protected-resource
+  jwks_uri: https://storefront.okcapsule.app/.well-known/jwks.json
+authentication:
+  model: OAuth 2.1 authorization_code + PKCE (S256 mandatory)
+  dynamic_client_registration: true
+  registration_endpoint: https://storefront.okcapsule.app/oauth/register
+  client_type: public — no client secrets are issued
+  grant_types:
+  - authorization_code
+  - refresh_token
+  machine_to_machine: false
+  machine_to_machine_note: >-
+    No client_credentials grant. A human staff member signs in with an email one-time code; there is no
+    unattended machine-to-machine path today, and no consumer-facing sign-in — every token belongs to
+    brand staff.
+  access_token: RS256 JWT, 1 hour, carries sub/role/email/tenant_id/tenant_slug/scope
+  refresh_token: 30 days, single-use, rotating
+  tenancy: one token is bound to exactly one workspace
+install_paths:
+- client: Claude / claude.ai / Claude Desktop
+  method: Settings -> Connectors -> Add custom connector -> paste https://storefront.okcapsule.app/mcp
+- client: Claude Code
+  method: claude mcp add --transport http okcapsule https://storefront.okcapsule.app/mcp
+- client: Cursor
+  method: one-click deep link from https://okcapsule.com/mcp/developers
+- client: VS Code
+  method: one-click deep link (requires VS Code 1.101+ with MCP enabled)
+- client: ChatGPT / Gemini / Perplexity
+  method: per-assistant guides at https://okcapsule.com/mcp/{chatgpt,gemini,perplexity}
+tool_count: 27
+tools:
+- name: okc_authenticate
+  category: session
+  scope: null
+  description: Establish or refresh the session
+- name: okc_debug_ping
+  category: session
+  scope: null
+  description: Connectivity and latency check
+- name: okc_confirm_pending_action
+  category: session
+  scope: null
+  description: Explicit confirmation step for destructive actions
+- name: okc_list_brands
+  category: catalog
+  scope: catalog:read
+  description: List brands (product lines)
+- name: okc_list_products
+  category: catalog
+  scope: catalog:read
+  description: List products
+- name: okc_get_catalog
+  category: catalog
+  scope: catalog:read
+  description: Full catalog view
+- name: okc_get_product_intelligence
+  category: catalog
+  scope: catalog:read
+  description: Ingredient/product intelligence for a product
+- name: okc_render_pack_builder
+  category: catalog
+  scope: catalog:read
+  description: Interactive pack-builder UI card
+- name: okc_pack_builder_url
+  category: catalog
+  scope: catalog:read
+  description: Create a shareable pack-builder link
+- name: okc_validate_recommendation
+  category: recommendations
+  scope: recommendations:read
+  description: Validate a supplement recommendation
+- name: okc_generate_supplement_facts_pdf
+  category: documents
+  scope: documents:write
+  description: Generate a supplement-facts PDF
+- name: okc_list_statuses
+  category: meta
+  scope: meta:read
+  description: List order/fulfillment status values
+- name: okc_get_consumer
+  category: consumers
+  scope: consumers:read
+  description: Fetch one consumer
+- name: okc_list_consumers
+  category: consumers
+  scope: consumers:read
+  description: List/search consumers
+- name: okc_upsert_consumer
+  category: consumers
+  scope: consumers:write
+  description: Create or update a consumer
+- name: okc_delete_consumer
+  category: consumers
+  scope: consumers:delete
+  description: Delete a consumer (opt-in scope)
+  destructive: true
+  confirmation_required: okc_confirm_pending_action
+- name: okc_list_orders
+  category: orders
+  scope: orders:read
+  description: List orders
+- name: okc_get_order
+  category: orders
+  scope: orders:read
+  description: Fetch one order
+- name: okc_get_order_by_client_id
+  category: orders
+  scope: orders:read
+  description: Fetch an order by your own order id
+- name: okc_list_order_transaction_logs
+  category: orders
+  scope: orders:read
+  description: Order event/transaction history
+- name: okc_render_order_status
+  category: orders
+  scope: orders:read
+  description: Order-status UI card
+- name: okc_create_order
+  category: orders
+  scope: orders:write
+  description: Create an order (opt-in scope)
+- name: okc_update_order
+  category: orders
+  scope: orders:write
+  description: Update an order (opt-in scope)
+- name: okc_cancel_order
+  category: orders
+  scope: orders:cancel
+  description: Cancel an order (opt-in scope)
+  destructive: true
+  confirmation_required: okc_confirm_pending_action
+- name: okc_list_fulfillments
+  category: fulfillments
+  scope: fulfillments:read
+  description: List fulfillments/shipments
+- name: okc_get_fulfillment
+  category: fulfillments
+  scope: fulfillments:read
+  description: Fetch one fulfillment
+- name: okc_get_shipping_label
+  category: fulfillments
+  scope: fulfillments:read
+  description: Retrieve a shipping label
+embedded_ui:
+  supported: true
+  tools:
+  - okc_render_pack_builder
+  - okc_render_order_status
+  note: >-
+    Both return embedded UI cards. Some MCP clients render them, others fall back to text; the provider
+    states both paths carry the same data.
+environments:
+- name: production
+  status: live
+  host: storefront.okcapsule.app
+  note: the only self-serve environment
+- name: staging
+  status: by arrangement only
+  note: periodically reset; no self-serve MCP sandbox today
+published_limitations:
+- No consumer-facing sign-in — every token belongs to brand staff.
+- No client_credentials grant; no unattended machine-to-machine path.
+- No self-serve sandbox for the MCP surface.
+- The MCP tools are the supported contract; the underlying REST endpoints are reference-only and can change without notice.
+- Tool schemas must be discovered at runtime with tools/list, not hardcoded.
+- The scope list is not final and will grow.
+- No unattended sessions beyond the 30-day refresh window.
+- Embedded UI cards do not render in every MCP client.

@@ -1,0 +1,122 @@
+generated: '2026-08-26'
+method: searched
+source: https://okcapsule.com/pricing/plans
+sources:
+- https://okcapsule.com/pricing/plans
+- https://okcapsule.com/pricing/calculator
+- https://okcapsule.com/shipping-rate-card
+currency: USD
+billing_model: per-pack
+plan_count: 3
+note: >-
+  Pricing is per manufactured pack, not per API call. API access is included on every tier, so there is
+  no API-specific paywall - the metering is physical. Tier assignment is automatic and volume-driven:
+  "All brands begin on the Starter tier and automatically progress to Professional and Enterprise
+  pricing as monthly order volume grows." Supplements themselves are not included in the pack price,
+  and shipping is charged at market rates per a separate rate card. The provider notes "Features and
+  pricing are indicative and subject to agreement."
+plans:
+- name: Starter
+  price: 21.00
+  currency: USD
+  unit: per 30-day pack (30 Pack AM)
+  billing_period: per order
+  volume_band: 0-500 orders/month
+  included:
+  - No minimum orders
+  - White-label packaging
+  - Full compliance docs
+  - Standard shipping
+  - API access
+  - Shopify App with Pack Builder
+  - Access to OKC product line formulary
+  - Standard design option, 4-page personalized pamphlet per order
+  - Pamphlet and label visualizers
+  - Standard reports
+  - 1 product line
+  limits:
+    product_lines: 1
+    support_response: 72h
+    pack_60_am_pm: not included
+    times_of_administration_per_day: not included
+    sla_shipped_within_24_business_hours: false
+  not_included:
+  - Onboarding tech support access
+  - Pack repairs
+  - Logo and custom text on packet design
+  - In-roll marketing
+  - Priority order processing
+  - International shipping
+- name: Professional
+  price: 16.00
+  currency: USD
+  unit: per 30-day pack (30 Pack AM)
+  billing_period: per order
+  volume_band: 500-2,000 orders/month
+  additional_pricing:
+  - item: 60 Pack AM/PM
+    price: 21.00
+  included:
+  - Everything in Starter
+  - Priority fulfillment
+  - Custom packaging options
+  - Dedicated support
+  - Onboarding tech support access
+  - Pack repairs
+  - Logo and custom text on packet design
+  - Up to three times of administration per day
+  - In-roll marketing
+  - Client success team access and promotional partnership
+  limits:
+    product_lines: 10
+    support_response: 24h
+    sla_shipped_within_24_business_hours: true
+  quoted:
+  - ERP integration
+  - International shipping
+  - 3rd party product inventory
+  - Formulary consulting
+  - Custom printed packaging
+  - Premium packaging
+  - Advanced analytics
+  - Expedited shipping
+  - Kitting
+- name: Enterprise
+  price: 14.00
+  currency: USD
+  unit: per 30-day pack (30 Pack AM)
+  billing_period: per order
+  volume_band: 2,000+ orders/month
+  additional_pricing:
+  - item: 60 Pack AM/PM
+    price: 19.00
+  included:
+  - Everything in Professional
+  - Volume discounts
+  - Custom API integrations
+  - Account manager
+  - Advanced analytics
+  limits:
+    product_lines: unlimited
+    support_response: 8h (Slack)
+    sla_shipped_within_24_business_hours: true
+  quoted:
+  - Custom engineering features (feature request and quoted)
+  - ERP integration
+  - International shipping
+  - 3rd party product inventory
+  - Formulary consulting
+  - Custom printed packaging
+  - Premium packaging
+  - Expedited shipping
+  - Kitting
+overage:
+  model: automatic tier progression
+  note: There is no overage charge; crossing a monthly volume band moves the brand to the next tier's lower per-pack price.
+shipping:
+  model: per rate card, market rates
+  source: https://okcapsule.com/shipping-rate-card
+  international: priced per quote on Professional and Enterprise, not available on Starter
+custom_quote:
+  available: true
+  contact: https://okcapsule.com/contact

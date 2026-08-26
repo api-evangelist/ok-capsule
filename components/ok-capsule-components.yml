@@ -1,0 +1,81 @@
+generated: '2026-08-26'
+method: searched
+source: https://okcapsule.com/mcp/developers
+sources:
+- https://okcapsule.com/mcp/developers
+- https://apps.shopify.com/ok-capsule-pack-builder
+- https://okcapsule.com/pricing/plans
+- https://okcapsule.com/pricing/calculator
+- openapi/ok-capsule-core-api-v2-openapi.yaml
+note: >-
+  OK Capsule ships no npm-distributed element library and no loader script - there is nothing to
+  `<script src>`. What it ships instead are three hosted, embedded surfaces: a Shopify app, a
+  server-rendered pack-builder widget delivered through the API, and MCP embedded UI cards rendered
+  inside the AI client. All three are the provider's own front-end code running against the provider's
+  own catalog; none is a package a developer installs.
+families:
+- family: Pack Builder
+  description: >-
+    The consumer-facing personalization surface - browse the formulary, assemble a daily pack, choose
+    AM/PM administration times, and check out. It is the product's marquee embeddable and it is
+    delivered three different ways.
+  surfaces:
+  - name: Shopify App - OK Capsule Supplement Packs (Pack Builder)
+    type: hosted app
+    url: https://apps.shopify.com/ok-capsule-pack-builder
+    availability: included on every pricing tier (Starter, Professional, Enterprise)
+    note: The fastest published route to revenue - the MCP or catalog builds the pack, the merchant's Shopify checkout closes the sale.
+  - name: Pack Builder widget (API-delivered)
+    type: server-rendered widget
+    operations:
+    - getPackBuilderWidget
+    - getPackBuilderWidgetProducts
+    - getPackBuilderWidgetCategories
+    - getPackBuilderWidgetCategoriesProducts
+    - getPackBuilderWidgetProductsCategories
+    - createPackBuilderWidgetCart
+    - getPackBuilderWidgetCart
+    paths:
+    - /v2/pack-builders/{id}/widget
+    - /v2/pack-builders/{id}/widget/products
+    - /v2/pack-builders/{id}/widget/categories
+    - /v2/pack-builders/{id}/widget/categories-products
+    - /v2/pack-builders/{id}/widget/categories/{categoryId}/products
+    - /v2/pack-builders/carts
+    - /v2/pack-builders/carts/{id}
+    note: >-
+      The widget is configured server-side (settings, categories, mapped products, shipping profiles)
+      and rendered from these endpoints, with its own cart resource. The OpenAPI carries roughly 40
+      pack-builder operations in total, of which these seven are the rendering surface.
+  - name: Shareable pack-builder link
+    type: hosted page
+    mcp_tool: okc_pack_builder_url
+    note: Creates a link a brand can send a customer to review and check out a pack an agent designed.
+- family: MCP embedded UI cards
+  description: >-
+    Interactive cards returned by MCP tool calls and rendered inside the AI client. This is a genuinely
+    modern component surface - the "embed" target is a chat client rather than a web page.
+  surfaces:
+  - name: Pack builder card
+    mcp_tool: okc_render_pack_builder
+    scope: catalog:read
+  - name: Order status card
+    mcp_tool: okc_render_order_status
+    scope: orders:read
+  caveat: >-
+    The provider is explicit that these do not render everywhere: "Some MCP clients render them; others
+    fall back to text - both paths carry the same data."
+- family: Marketing / merchandising tools
+  description: First-party interactive tools on the marketing site, not embeddable by customers.
+  surfaces:
+  - name: Pricing calculator
+    url: https://okcapsule.com/pricing/calculator
+    note: Build a custom pack and see per-pack cost and monthly revenue update live.
+  - name: Pamphlet Visualizer
+    availability: included on every tier
+    note: Preview the 4-page personalized pamphlet that ships with each order.
+  - name: Label Visualizer
+    availability: included on every tier
+    note: Preview custom pouch labels.
+loader_libraries: []
+npm_packages: []

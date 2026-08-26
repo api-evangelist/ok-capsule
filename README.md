@@ -64,5 +64,17 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-OK Capsule is a company surfaced via the API Evangelist harvest backlog (source: secondary-market) and added to the network as a stub for full-pipeline profiling.
-- https://www.nasdaqprivatemarket.com/
+OK Capsule is an on-demand, private-label supplement manufacturing and fulfillment platform. Health
+brands, telehealth providers, clinics and retailers use it to launch personalized daily vitamin packs
+without minimum order quantities, inventory or upfront deposits.
+
+It publishes two API surfaces:
+
+- **Core API V2** — a REST API with 199 operations across 121 paths (clients, consumers, orders, order
+  lines, fulfillments, assemblies, batches, billings, product lines, pack builders, UPC codes).
+  Docs: https://docs.okcapsule.app/docs/ · Reference: https://api2-docs.okcapsule.app/
+- **MCP Server** — a production remote Model Context Protocol server at
+  `https://storefront.okcapsule.app/mcp`, exposing catalog, pack building, consumers, orders and
+  fulfillments as OAuth 2.1 scoped tools. Docs: https://okcapsule.com/mcp/developers
+
+- https://okcapsule.com/

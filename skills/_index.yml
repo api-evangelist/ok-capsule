@@ -1,0 +1,28 @@
+generated: '2026-08-26'
+method: generated
+source: >-
+  openapi/ok-capsule-core-api-v2-openapi.yaml, mcp/ok-capsule-mcp.yml, conventions/ok-capsule-conventions.yml,
+  errors/ok-capsule-problem-types.yml, and the provider docs at https://docs.okcapsule.app/docs/ and
+  https://okcapsule.com/mcp/developers
+note: >-
+  No provider-published Agent Skill or AGENTS.md was found on any OK Capsule host. These three are
+  generated from the real contract: every operationId and every MCP tool name below was verified
+  against openapi/ok-capsule-core-api-v2-openapi.yaml or the provider's published tool table. Nothing
+  is invented. Each skill leads with consequence, because writes on this API manufacture and ship
+  physical goods.
+skills:
+- name: ok-capsule-create-personalized-supplement-order
+  file: ok-capsule-create-personalized-supplement-order.md
+  api: OK Capsule Core API V2
+  summary: Catalog lookup through order confirmation, with a caller-side duplicate guard standing in for the absent idempotency key.
+  operations: [createAuthenticationToken, listProducts, getProduct, listConsumers, createConsumer, getOrderByClientCustomId, createOrder, getOrder]
+- name: ok-capsule-track-order-to-delivery
+  file: ok-capsule-track-order-to-delivery.md
+  api: OK Capsule Core API V2
+  summary: Poll an order through the status ladder to a tracked shipment; there are no webhooks, so cadence discipline matters.
+  operations: [getOrder, getOrderByClientCustomId, listOrders, getOrderFulfillments, listFulfillments, getFulfillment, getFulfillmentLabelUrl, listOrderTransactionLogs, listStatuses]
+- name: ok-capsule-operate-catalog-via-mcp
+  file: ok-capsule-operate-catalog-via-mcp.md
+  api: OK Capsule MCP Server
+  summary: Run the brand from an MCP host - catalog, pack design, consumers, orders, fulfillment - honouring the opt-in scopes and the two-step confirmation gate.
+  operations: [okc_authenticate, okc_list_brands, okc_list_products, okc_get_catalog, okc_get_product_intelligence, okc_validate_recommendation, okc_render_pack_builder, okc_pack_builder_url, okc_list_consumers, okc_upsert_consumer, okc_create_order, okc_get_order, okc_cancel_order, okc_confirm_pending_action, okc_list_fulfillments, okc_get_shipping_label]

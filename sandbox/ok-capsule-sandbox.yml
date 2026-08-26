@@ -1,0 +1,69 @@
+generated: '2026-08-26'
+method: searched
+source: openapi/ok-capsule-core-api-v2-openapi.yaml
+sources:
+- openapi/ok-capsule-core-api-v2-openapi.yaml (info.description "Environments" table and servers[])
+- https://docs.okcapsule.app/docs/getting-started
+- https://docs.okcapsule.app/docs/recipes/troubleshooting
+- https://okcapsule.com/mcp/developers
+- https://api2-docs.okcapsule.app/
+available: true
+self_serve: false
+model: separate environment
+note: >-
+  Separation is by HOST, not by key prefix or a test-mode flag. There are no test keys, test cards or
+  magic identifiers to record - and there is nothing to invent here. A stage account is provisioned by
+  OK Capsule; credentials do not carry a distinguishing prefix, so a caller tells the environments
+  apart only by which base URL they point at. That is worth knowing before an integration: a
+  misconfigured base URL sends a real order into production manufacturing, and there is no key shape
+  that would have caught it.
+environments:
+- name: Production
+  base_url: https://na1-prod.okcapsule.app
+  purpose: Live orders
+  effects: Real fulfillment and shipping
+- name: Stage
+  base_url: https://na1-stage.okcapsule.app
+  purpose: Testing
+  effects: Test data only, no real shipments
+isolation:
+  users: environment-specific
+  data: environment-specific
+  credentials: >-
+    Stage credentials do not work in Production. The docs warn explicitly: "Users and data are
+    environment-specific" and "Never share tokens between environments (stage vs production)."
+access:
+  self_serve: false
+  process: >-
+    Not self-serve. Account and brand (Product Line) setup must be complete, then API credentials -
+    stage or production - are issued by an OK Capsule representative.
+interactive_console:
+  available: true
+  url: https://api2-docs.okcapsule.app/
+  type: Swagger UI
+  features:
+  - Try-it-out for all endpoints
+  - Full request/response schemas
+  - Authentication testing
+  - Example payloads
+  note: >-
+    The Swagger UI is publicly reachable and loads the real spec, so the operation surface is browsable
+    without credentials. Executing a request still requires an issued token, and the server list it
+    offers is production and stage - there is no read-only demo tenant.
+test_data:
+  test_keys: []
+  test_cards: []
+  magic_identifiers: []
+  test_clocks: false
+  fixtures_or_triggers: false
+  note: >-
+    OK Capsule publishes no test values of any kind - no seeded consumers, no reserved product UUIDs,
+    no trigger identifiers to force an order into a given status. A stage tenant starts empty and the
+    integrator populates it. Nothing is recorded here because nothing is published.
+mcp_surface:
+  sandbox: false
+  note: >-
+    The MCP server has no sandbox. The provider states plainly under Known gaps & limitations: "No
+    self-serve sandbox. Staging exists by arrangement and is periodically reset." Production
+    (storefront.okcapsule.app) is the only self-serve MCP environment, and every tool call there acts
+    on the real workspace.

@@ -1,0 +1,54 @@
+generated: '2026-08-26'
+method: searched
+source: https://docs.okcapsule.app/docs/recipes/error-handling
+sources:
+- https://docs.okcapsule.app/docs/recipes/error-handling
+- https://docs.okcapsule.app/docs/recipes/order-lifecycle
+- openapi/ok-capsule-core-api-v2-openapi.yaml (components.headers)
+limit_count: 0
+note: >-
+  OK Capsule signals rate limiting properly but never publishes a number. The runtime signal is fully
+  specified - three X-RateLimit-* headers are declared in components.headers of the OpenAPI, and the
+  error-handling recipe documents 429 with Retry-After plus a prescribed backoff - but no tier, window
+  size or request quota appears anywhere in the docs, the pricing page or the contract. An agent can
+  react correctly to being limited; it cannot budget in advance. limit_count is 0 because zero numeric
+  limits are published, not because limiting is absent.
+headers:
+- name: X-RateLimit-Limit
+  type: integer
+  description: Request limit per hour.
+  declared_in: openapi components.headers
+- name: X-RateLimit-Remaining
+  type: integer
+  description: The number of requests left for the time window.
+  declared_in: openapi components.headers
+- name: X-RateLimit-Reset
+  type: string (date-time)
+  description: The UTC date/time at which the current rate limit window resets.
+  declared_in: openapi components.headers
+- name: Retry-After
+  type: integer (seconds)
+  description: Seconds to wait before retrying, returned on 429.
+  declared_in: https://docs.okcapsule.app/docs/recipes/error-handling
+window:
+  unit: hour
+  evidence: X-RateLimit-Limit is described as "Request limit per hour", which fixes the window even though the value is not published.
+exhaustion:
+  status: 429
+  status_text: Too Many Requests
+  declared_in_spec: false
+  note: 429 is documented in the error-handling recipe but is not declared as a response on any of the 199 operations.
+limits: []
+published_guidance:
+- Implement exponential backoff. The docs ship a withRetry helper using 1s, 2s, 4s delays over 3 attempts.
+- Honor the Retry-After header value rather than a fixed sleep.
+- Cache responses where possible.
+- Batch operations where supported.
+- >-
+  Order statuses are typically updated every 6 hours during business operations. Polling more
+  frequently than every few hours is unnecessary and may be rate limited.
+mcp_surface:
+  note: >-
+    No rate limits are published for the MCP server at https://storefront.okcapsule.app/mcp. The only
+    published throughput constraints on that surface are the token lifetimes - a 1-hour access token
+    and a 30-day rotating refresh window.
