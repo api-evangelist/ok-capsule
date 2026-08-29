@@ -10,6 +10,18 @@ description: >-
   fulfillment surface as OAuth 2.1 scoped tools for Claude, ChatGPT, Gemini and other MCP hosts.
   Supplements are manufactured in cGMP-certified, FDA-registered facilities and lot-tested by
   ISO 17025 accredited third-party labs.
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: true
+  label: Hosted service · you call their endpoint
+  confidence: high
+  source:
+  - openapi
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 image: https://okcapsule.com/og-preview.png
 url: https://raw.githubusercontent.com/api-evangelist/ok-capsule/refs/heads/main/apis.yml
 x-type: company
@@ -921,6 +933,9 @@ apis:
   - type: DataModel
     url: data-model/ok-capsule-data-model.yml
 common:
+- type: CapabilityMap
+  url: capabilities/ok-capsule-capability-edges.yml
+  name: OK Capsule Business Capability Map
 - type: Overlay
   url: overlays/ok-capsule-core-api-v2-overlay.yaml
 - type: Website
