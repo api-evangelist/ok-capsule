@@ -1,0 +1,1114 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 OKC Products API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: OKC Products
+  description: Routes to manage OK Capsule products
+paths:
+  /v2/okc-products:
+    post:
+      tags:
+      - OKC Products
+      security:
+      - bearerAuth:
+        - okc_products/write
+      summary: Creates an OK Capsule product.
+      operationId: createOkcProduct
+      description: Creates an OK Capsule product.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - available_quantity
+              - fda_disclaimer
+              description: Create a new OKC product (internal use only)
+              x-internal: true
+              properties:
+                available_quantity:
+                  type: number
+                  description: Available inventory quantity
+                  example: 1000
+                fda_disclaimer:
+                  type: string
+                  description: FDA disclaimer text
+                  example: '*These statements have not been evaluated by the Food and Drug Administration.'
+                erp_id:
+                  type: string
+                  description: ERP system identifier
+                  x-internal: true
+                  example: AIP012345
+                sku:
+                  type: string
+                  description: Stock keeping unit
+                  example: SKU-147-057
+                name:
+                  type: string
+                  description: Internal product name
+                  example: Vitamin D3 5000 IU
+                display_name:
+                  type: string
+                  description: Display name for customers
+                  example: Vitamin D3 Softgel
+                crm_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: CRM identifier
+                  x-internal: true
+                  example: PROD-12345
+                active:
+                  type: boolean
+                  default: true
+                  example: true
+                product_assembly_type:
+                  type: string
+                  enum:
+                  - PRODUCT
+                  - ASSEMBLY
+                  - SET
+                  default: PRODUCT
+                  description: Product or assembly type
+                  example: PRODUCT
+                product_family:
+                  type: string
+                  enum:
+                  - Discount - Proprietary
+                  - Discount - Standard
+                  - Fulfillment - Proprietary
+                  - Fulfillment - Standard
+                  - Service - Proprietary
+                  - Service - Standard
+                  - Supplement - Proprietary
+                  - Supplement - Standard
+                  - None
+                  - Cleaning Supplies
+                  - Office Equipment
+                  - Production Supplies
+                  - Manufactured
+                  default: Supplement - Standard
+                  example: Supplement - Standard
+                product_type:
+                  type: integer
+                  description: Product type ID
+                  example: 1
+                supplement_category:
+                  type: string
+                  description: Supplement category
+                  example: Vitamins
+                supplement_type:
+                  type: string
+                  example: Fat Soluble
+                is_third_party:
+                  type: boolean
+                  example: false
+                third_party_product_client_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: Client ID for third-party products
+                lifecycle_status:
+                  type:
+                  - string
+                  - 'null'
+                  description: Product lifecycle status
+                has_currently_active_lot:
+                  type: boolean
+                  default: false
+                price_per_pill:
+                  type: number
+                  description: Price per pill/unit
+                  example: 0.15
+                price_per_unit:
+                  type:
+                  - number
+                  - 'null'
+                  format: decimal
+                  description: Price per individual unit of this product.
+                  example: 1.25
+                msrp:
+                  type: number
+                  description: Manufacturer's suggested retail price
+                  example: 29.99
+                msrp_30_day_roll:
+                  type: number
+                  example: 4.5
+                price_30_day_roll:
+                  type: number
+                  example: 3.6
+                serving_size:
+                  type: integer
+                  description: Default serving size
+                  example: 1
+                max_serving_size_limit:
+                  type: string
+                  example: '4'
+                dosage:
+                  type: string
+                  example: 5000 IU
+                time_of_administration:
+                  type: string
+                  enum:
+                  - Morning
+                  - Midday
+                  - Evening
+                  example: Morning
+                suggested_use:
+                  type: string
+                  example: Take 1 softgel daily with food
+                short_description:
+                  type: string
+                  example: High-potency Vitamin D3 for bone and immune health
+                long_description:
+                  type: string
+                  example: Vitamin D3 (cholecalciferol) supports calcium absorption for strong bones...
+                key_points:
+                  type: string
+                  example: Supports bone health, immune function, and mood
+                product_structure_function_claims:
+                  type: string
+                  example: Supports healthy bones and teeth
+                product_warnings:
+                  type: string
+                  example: Keep out of reach of children
+                ingredient_warnings:
+                  type: string
+                  example: Contains soy
+                not_to_be_used_by:
+                  type: string
+                  example: Pregnant or nursing women
+                contains_no:
+                  type: string
+                  example: Gluten, dairy, artificial colors
+                has_product_level_prop_65_warning:
+                  type: boolean
+                  example: false
+                product_level_prop_65_warning_text:
+                  type: string
+                  example: ''
+                pill_type:
+                  type: string
+                  example: Softgel
+                weight:
+                  type: number
+                  description: Weight in grams
+                  example: 0.5
+                height:
+                  type: number
+                  example: 1.2
+                width:
+                  type: number
+                  example: 0.8
+                length:
+                  type: number
+                  example: 0.8
+                image:
+                  type: string
+                  format: uri
+                  example: https://cdn.example.com/products/vitamin-d3.jpg
+                image_url:
+                  type: string
+                  format: uri
+                  example: https://cdn.example.com/products/vitamin-d3.jpg
+                sfp_url:
+                  type: string
+                  format: uri
+                  description: Supplement facts panel URL
+                sfp_notes:
+                  type: string
+                other_ingredients:
+                  type: string
+                  example: Olive oil, gelatin, glycerin
+                warehouse_id:
+                  type: string
+                  example: WH001
+                score_total:
+                  type: string
+                  example: '85.5'
+                supplement_markup_percentage:
+                  type: number
+                  example: 40
+              example:
+                available_quantity: 1000
+                fda_disclaimer: '*These statements have not been evaluated by the FDA.'
+              x-examples:
+                required-only:
+                  summary: Create with required fields only
+                  value:
+                    available_quantity: 1000
+                    fda_disclaimer: '*These statements have not been evaluated by the Food and Drug Administration.'
+                complete:
+                  summary: Create with all common fields
+                  value:
+                    available_quantity: 1000
+                    fda_disclaimer: '*These statements have not been evaluated by the Food and Drug Administration.'
+                    erp_id: AIP012345
+                    sku: SKU-VIT-D3-5000
+                    name: Vitamin D3 5000 IU
+                    display_name: Vitamin D3 Softgel
+                    active: true
+                    product_assembly_type: PRODUCT
+                    product_family: Supplement - Standard
+                    supplement_category: Vitamins
+                    price_per_pill: 0.15
+                    serving_size: 1
+                    dosage: 5000 IU
+                    time_of_administration: Morning
+                    short_description: High-potency Vitamin D3
+                    suggested_use: Take 1 softgel daily with food
+                    pill_type: Softgel
+                    weight: 0.5
+                    image_url: https://cdn.example.com/products/vitamin-d3.jpg
+            examples:
+              ProductCompleteSample:
+                $ref: '#/components/examples/OkcProductSampleComplete'
+              ProductSample:
+                $ref: '#/components/examples/OkcProductSample'
+      responses:
+        '201':
+          description: Returns a created OK Capsule product.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  okc_product:
+                    $ref: '#/components/schemas/OkcProduct'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    get:
+      tags:
+      - OKC Products
+      security:
+      - bearerAuth:
+        - okc_products/read
+      summary: List OK Capsule products.
+      operationId: listOkcProducts
+      description: "List OK Capsule products.\n\n Filterable fields:\n   * active\n   * is_third_party\n   * has_product_level_prop_65_warning\n   * product_type\n   * supplement_type\n   * supplement_category\n   * display_name\n   * name\n   * sku\n   * crm_id\n\n Sortable fields:\n   * name\n"
+      parameters:
+      - $ref: '#/components/parameters/LimitParameters'
+      - $ref: '#/components/parameters/CursorParameters'
+      - $ref: '#/components/parameters/SortByParameters'
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  okc_products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OkcProduct'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/okc-products/count:
+    get:
+      tags:
+      - OKC Products
+      security:
+      - bearerAuth:
+        - okc_products/read
+      summary: Count of all okc_products
+      operationId: getOkcProductTotalCount
+      description: "Count of all okc_products.\n\n Filterable fields:\n   * active\n   * is_third_party\n   * has_product_level_prop_65_warning\n   * product_type\n   * supplement_type\n   * supplement_category\n   * display_name\n   * name\n   * sku\n   * crm_id\n"
+      parameters:
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Count'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/okc-products/{id}:
+    get:
+      tags:
+      - OKC Products
+      security:
+      - bearerAuth:
+        - okc_products/read
+      summary: Get an OK Capsule product by id.
+      operationId: getOkcProduct
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '200':
+          description: Returns OK Capsule product for a valid identifier.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  okc_product:
+                    $ref: '#/components/schemas/OkcProduct'
+    put:
+      tags:
+      - OKC Products
+      security:
+      - bearerAuth:
+        - okc_products/write
+      summary: Update OK Capsule product.
+      operationId: updateOkcProduct
+      description: Update OK Capsule product.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Update an OKC product (internal use only). All fields optional.
+              x-internal: true
+              properties:
+                erp_id:
+                  type: string
+                  x-internal: true
+                  example: AIP012345
+                sku:
+                  type: string
+                  example: SKU-147-057
+                name:
+                  type: string
+                  example: Vitamin D3 5000 IU
+                display_name:
+                  type: string
+                  example: Vitamin D3 Softgel
+                crm_id:
+                  type:
+                  - string
+                  - 'null'
+                  x-internal: true
+                available_quantity:
+                  type: number
+                  example: 1000
+                active:
+                  type: boolean
+                  example: true
+                product_assembly_type:
+                  type: string
+                  enum:
+                  - PRODUCT
+                  - ASSEMBLY
+                  - SET
+                  example: PRODUCT
+                product_family:
+                  type: string
+                  enum:
+                  - Discount - Proprietary
+                  - Discount - Standard
+                  - Fulfillment - Proprietary
+                  - Fulfillment - Standard
+                  - Service - Proprietary
+                  - Service - Standard
+                  - Supplement - Proprietary
+                  - Supplement - Standard
+                  - None
+                  - Cleaning Supplies
+                  - Office Equipment
+                  - Production Supplies
+                  - Manufactured
+                  example: Supplement - Standard
+                product_type:
+                  type: integer
+                  example: 1
+                supplement_category:
+                  type: string
+                  example: Vitamins
+                supplement_type:
+                  type: string
+                is_third_party:
+                  type: boolean
+                third_party_product_client_id:
+                  type:
+                  - string
+                  - 'null'
+                lifecycle_status:
+                  type:
+                  - string
+                  - 'null'
+                has_currently_active_lot:
+                  type: boolean
+                price_per_pill:
+                  type: number
+                  example: 0.15
+                price_per_unit:
+                  type:
+                  - number
+                  - 'null'
+                  format: decimal
+                  description: Price per individual unit of this product.
+                  example: 1.25
+                msrp:
+                  type: number
+                  example: 29.99
+                msrp_30_day_roll:
+                  type: number
+                price_30_day_roll:
+                  type: number
+                serving_size:
+                  type: integer
+                  example: 1
+                max_serving_size_limit:
+                  type: string
+                dosage:
+                  type: string
+                time_of_administration:
+                  type: string
+                  enum:
+                  - Morning
+                  - Midday
+                  - Evening
+                suggested_use:
+                  type: string
+                fda_disclaimer:
+                  type: string
+                short_description:
+                  type: string
+                long_description:
+                  type: string
+                key_points:
+                  type: string
+                product_structure_function_claims:
+                  type: string
+                product_warnings:
+                  type: string
+                ingredient_warnings:
+                  type: string
+                not_to_be_used_by:
+                  type: string
+                contains_no:
+                  type: string
+                has_product_level_prop_65_warning:
+                  type: boolean
+                product_level_prop_65_warning_text:
+                  type: string
+                pill_type:
+                  type: string
+                weight:
+                  type: number
+                height:
+                  type: number
+                width:
+                  type: number
+                length:
+                  type: number
+                image:
+                  type: string
+                  format: uri
+                image_url:
+                  type: string
+                  format: uri
+                sfp_url:
+                  type: string
+                  format: uri
+                sfp_notes:
+                  type: string
+                other_ingredients:
+                  type: string
+                warehouse_id:
+                  type: string
+                score_total:
+                  type: string
+                supplement_markup_percentage:
+                  type: number
+              example:
+                available_quantity: 500
+              x-examples:
+                update-quantity:
+                  summary: Update inventory quantity
+                  value:
+                    available_quantity: 500
+                update-pricing:
+                  summary: Update pricing
+                  value:
+                    price_per_pill: 0.18
+                    msrp: 34.99
+                update-status:
+                  summary: Update product status
+                  value:
+                    active: false
+                    lifecycle_status: Discontinued
+                complete:
+                  summary: Comprehensive update
+                  value:
+                    available_quantity: 1500
+                    active: true
+                    price_per_pill: 0.16
+                    msrp: 32.99
+                    short_description: Updated high-potency Vitamin D3
+                    serving_size: 1
+                    time_of_administration: Morning
+      responses:
+        '200':
+          description: Returns the updated OK Capsule product.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    $ref: '#/components/schemas/OkcProduct'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    delete:
+      tags:
+      - OKC Products
+      security:
+      - bearerAuth:
+        - okc_products/write
+      summary: Delete an OK Capsule product.
+      operationId: deleteOkcProduct
+      description: Delete an OK Capsule product.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '204':
+          description: Confirms deletion of an OK Capsule product.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+components:
+  parameters:
+    SortByParameters:
+      in: query
+      name: sort_by
+      description: Sort values by a specific property. See available sort by values in the table.
+      schema:
+        type: string
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
+    LimitParameters:
+      in: query
+      name: limit
+      description: Number of results to return. Default 50, max 250.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  schemas:
+    OkcProduct:
+      allOf:
+      - allOf:
+        - type: object
+          required:
+          - created_at
+          - updated_at
+          properties:
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+        - type: object
+          required:
+          - available_quantity
+          - fda_disclaimer
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            erp_id:
+              type: string
+              x-internal: true
+              description: Internal use only.
+              example: AIP012345
+            available_quantity:
+              type: number
+              example: 147
+            active:
+              type: boolean
+              example: true
+            contains_no:
+              type: string
+              example: ''
+            dosage:
+              type: string
+              example: ''
+            fda_disclaimer:
+              type: string
+              example: ''
+            has_product_level_prop_65_warning:
+              type: boolean
+              example: false
+            height:
+              type: number
+              example: 0
+            image_url:
+              type: string
+              example: https://store.com/product.jpg
+            ingredient_warnings:
+              type: string
+              example: ''
+            is_third_party:
+              type: boolean
+              example: true
+            key_points:
+              type: string
+              example: ''
+            length:
+              type: number
+              example: 0
+            long_description:
+              type: string
+              example: ''
+            max_serving_size_limit:
+              type: string
+              example: '0'
+            msrp:
+              type: number
+              example: 0
+            msrp_30_day_roll:
+              type: number
+              example: 0
+            name:
+              type: string
+              example: MaskC Energy Boost Sachet
+            display_name:
+              type: string
+              example: MaskC Energy Pack Sachet
+            not_to_be_used_by:
+              type: string
+              example: ''
+            image:
+              type: string
+              example: https://store.com/product.jpg
+            pill_type:
+              type: string
+              example: ''
+            price_30_day_roll:
+              type: number
+              example: 882
+            price_per_pill:
+              type: number
+              example: 1.47
+            price_per_unit:
+              type:
+              - number
+              - 'null'
+              format: decimal
+              example: 1.25
+              description: Price per individual unit of this product.
+            product_assembly_type:
+              type: string
+              enum:
+              - ASSEMBLY
+              - PRODUCT
+              - SET
+              example: PRODUCT
+            product_family:
+              type: string
+              example: Manufactured
+            product_level_prop_65_warning_text:
+              type: string
+              example: Warning message
+            sku:
+              type: string
+              example: SKU-147-057
+            product_structure_function_claims:
+              type: string
+              example: ''
+            product_type:
+              type: string
+              example: Supplement
+            product_warnings:
+              type: string
+              example: ''
+            score_total:
+              type: string
+              example: 0
+            serving_size:
+              type: integer
+              example: 1
+            sfp_notes:
+              type: string
+              example: ''
+            sfp_url:
+              type: string
+              example: ''
+            short_description:
+              type: string
+              example: ''
+            suggested_use:
+              type: string
+              example: ''
+            supplement_category:
+              type: string
+              example: Amino Acids
+            supplement_type:
+              type: string
+              example: ''
+            time_of_administration:
+              type: string
+              enum:
+              - Morning
+              - Midday
+              - Evening
+              example: Morning
+            weight:
+              type: number
+              example: 0.12
+            width:
+              type: number
+              example: 0.14
+            warehouse_id:
+              type: string
+              example: WH001-478
+            other_ingredients:
+              type: string
+              example: ''
+            crm_id:
+              type: string
+              x-internal: true
+              description: Internal use only.
+              example: ABCDE12587AHSNNHS
+            lifecycle_status:
+              type: string
+              example: Active
+            has_currently_active_lot:
+              type: boolean
+              example: true
+            third_party_product_client_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+    Count:
+      allOf:
+      - type: object
+        properties:
+          count:
+            type: number
+            example: 8
+  examples:
+    OkcProductSampleComplete:
+      summary: Creates an OKC product.
+      value:
+        erp_id: AIP012345
+        available_quantity: 154
+        active: true
+        contains_no: ''
+        dosage: ''
+        fda_disclaimer: ''
+        has_product_level_prop_65_warning: false
+        height: 0
+        image_url: https://store.com/product.jpg
+        ingredient_warnings: ''
+        is_third_party: false
+        key_points: ''
+        length: ''
+        long_description: ''
+        max_serving_size_limit: '0'
+        msrp: 0
+        msrp_30_day_roll: 882
+        name: MaskC Anti Inflamatory FP
+        display_name: MaskC Anti Inflamatory FP
+        not_to_be_used_by: ''
+        pill_type: ''
+        price_30_day_roll: ''
+        price_per_pill: ''
+        product_family: Manufactured
+        product_level_prop_65_warning_text: ''
+        product_sku: ''
+        product_structure_function_claims: ''
+        product_type: simple
+        product_warnings: ''
+        score_total: ''
+        serving_size: 1
+        sfp_notes: ''
+        sfp_url: ''
+        short_description: ''
+        suggested_use: ''
+        supplement_category: ''
+        supplement_markup_percentage: ''
+        supplement_type: ''
+        time_of_administration: Morning
+        weight: 0.11
+        width: 0.14
+        warehouse_id: WH001-478
+        other_ingredients: ''
+        crm_id: 01t4P00000Bgk3wQAB
+    OkcProductSample:
+      summary: Creates an OKC product with only the required fields.
+      value:
+        available_quantity: 10
+        fda_disclaimer: Disclaimer
+  responses:
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

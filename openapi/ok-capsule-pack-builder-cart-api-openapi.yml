@@ -1,0 +1,423 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Pack Builder Cart API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Pack Builder Cart
+paths:
+  /v2/pack-builders/carts:
+    post:
+      tags:
+      - Pack Builder Cart
+      summary: Creates a pack builder widget cart.
+      operationId: createPackBuilderWidgetCart
+      description: Creates a pack builder widget cart.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - pack_builder_id
+              - cart_lines
+              description: Create a shopping cart for pack builder widget
+              properties:
+                pack_builder_id:
+                  type: string
+                  format: uuid
+                  description: Pack builder ID
+                  example: 8e697e7e-02eb-4a2c-8234-5b6298a56c44
+                cart_lines:
+                  type: array
+                  description: Products in the cart
+                  items:
+                    type: object
+                    required:
+                    - product_id
+                    - time_of_administration
+                    - cycle
+                    - cycle_length
+                    - serving_size
+                    properties:
+                      product_id:
+                        type: string
+                        format: uuid
+                        description: Client product ID
+                        example: 142c9cf7-c665-4beb-a24f-79f68334d232
+                      time_of_administration:
+                        type: string
+                        enum:
+                        - Morning
+                        - Midday
+                        - Evening
+                        description: When to take
+                        example: Morning
+                      cycle:
+                        type: string
+                        description: Dosing cycle - "daily" or semicolon-delimited days (e.g., "1;3;5;7")
+                        example: daily
+                      cycle_length:
+                        type: integer
+                        enum:
+                        - 7
+                        - 10
+                        description: Cycle length in days
+                        example: 7
+                      serving_size:
+                        type: integer
+                        minimum: 1
+                        description: Number of pills/units per serving
+                        example: 2
+                      duration:
+                        type: integer
+                        description: Duration in days
+                        example: 30
+              example:
+                pack_builder_id: 8e697e7e-02eb-4a2c-8234-5b6298a56c44
+                cart_lines:
+                - product_id: 142c9cf7-c665-4beb-a24f-79f68334d232
+                  time_of_administration: Morning
+                  cycle: daily
+                  cycle_length: 7
+                  serving_size: 2
+              x-examples:
+                single-product:
+                  summary: Cart with single product
+                  value:
+                    pack_builder_id: 8e697e7e-02eb-4a2c-8234-5b6298a56c44
+                    cart_lines:
+                    - product_id: 142c9cf7-c665-4beb-a24f-79f68334d232
+                      time_of_administration: Morning
+                      cycle: daily
+                      cycle_length: 7
+                      serving_size: 2
+                      duration: 30
+                multiple-products:
+                  summary: Cart with multiple products
+                  value:
+                    pack_builder_id: 8e697e7e-02eb-4a2c-8234-5b6298a56c44
+                    cart_lines:
+                    - product_id: 142c9cf7-c665-4beb-a24f-79f68334d232
+                      time_of_administration: Morning
+                      cycle: daily
+                      cycle_length: 7
+                      serving_size: 2
+                      duration: 30
+                    - product_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                      time_of_administration: Evening
+                      cycle: daily
+                      cycle_length: 7
+                      serving_size: 1
+                      duration: 30
+                custom-cycle:
+                  summary: Cart with custom dosing cycle
+                  value:
+                    pack_builder_id: 8e697e7e-02eb-4a2c-8234-5b6298a56c44
+                    cart_lines:
+                    - product_id: 142c9cf7-c665-4beb-a24f-79f68334d232
+                      time_of_administration: Morning
+                      cycle: 1;3;5;7
+                      cycle_length: 7
+                      serving_size: 1
+      responses:
+        '201':
+          description: Returns the created Cart object.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - cart
+                properties:
+                  cart:
+                    $ref: '#/components/schemas/Cart'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+  /v2/pack-builders/carts/{id}:
+    get:
+      tags:
+      - Pack Builder Cart
+      summary: Retrieves a pack builder widget cart
+      operationId: getPackBuilderWidgetCart
+      description: Retrieves a Cart object
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '200':
+          description: Returns the Cart object.
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Cart'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+components:
+  schemas:
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
+    Cart:
+      allOf:
+      - type: object
+        required:
+        - id
+        - pack_builder_id
+        - order_id
+        - cart_lines
+        properties:
+          id:
+            type: string
+            format: uuid
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+          pack_builder_id:
+            type: string
+            format: uuid
+            example: 8e697e7e-02eb-4a2c-8234-5b6298a56c44
+          order_id:
+            type: string
+            format: uuid
+            example: 9b31ad69-bbf3-448a-b646-fb70d0cb6fa1
+          cart_lines:
+            type: array
+            items:
+              type: object
+              required:
+              - id
+              - cart_id
+              - product_id
+              - time_of_administration
+              - cycle
+              - cycle_length
+              - serving_size
+              - duration
+              properties:
+                id:
+                  type: string
+                  example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                cart_id:
+                  type: string
+                  example: 16c7f308-ce24-46d0-b4ad-39e291d8049b
+                product_id:
+                  type: string
+                  example: 142c9cf7-c665-4beb-a24f-79f68334d232
+                time_of_administration:
+                  type: string
+                  enum:
+                  - Morning
+                  - Midday
+                  - Evening
+                  example: Morning
+                cycle:
+                  type: string
+                  example: '"daily" or a list of semi-colon delimited positive integers less than or equal to the `cycle_length`: "1;3;5;7;9"'
+                cycle_length:
+                  type: integer
+                  enum:
+                  - 7
+                  - 10
+                  example: 7
+                serving_size:
+                  type: integer
+                  example: 2
+                duration:
+                  type: integer
+                  example: 30
+                pack_name:
+                  type: string
+                  example: Pack name
+                health_goal:
+                  type: string
+                  example: Health goal
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+  parameters:
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

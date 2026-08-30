@@ -1,0 +1,1032 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Packaging Asset Groups API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Packaging Asset Groups
+paths:
+  /v2/packaging-asset-groups:
+    post:
+      tags:
+      - Packaging Asset Groups
+      security:
+      - bearerAuth:
+        - product_lines/read
+      summary: Creates a PAG (packaging asset group).
+      operationId: createPackagingAssetGroup
+      description: Creates a PAG (packaging asset group).
+      parameters:
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - fulfillment_okc_product_ids
+              description: Create a new packaging asset group. Uses multipart/form-data for file uploads.
+              properties:
+                fulfillment_okc_product_ids:
+                  type: array
+                  description: OKC product IDs for fulfillment boxes (at least one required)
+                  minItems: 1
+                  items:
+                    type: string
+                    format: uuid
+                  example:
+                  - d290f1ee-6c54-4b01-90e6-d701748f0851
+                pamphlet_cover_image:
+                  type: string
+                  format: binary
+                  description: Cover page image file
+                pamphlet_inside_cover_image:
+                  type: string
+                  format: binary
+                  description: Inside cover image file
+                pamphlet_back_image:
+                  type: string
+                  format: binary
+                  description: Back cover image file
+                sleeve_label_large_file:
+                  type:
+                  - string
+                  - 'null'
+                  format: binary
+                  description: Large sleeve label file
+                sleeve_label_small_file:
+                  type:
+                  - string
+                  - 'null'
+                  format: binary
+                  description: Small sleeve label file
+                pouch_label_file:
+                  type:
+                  - string
+                  - 'null'
+                  format: binary
+                  description: Pouch label file
+                pouch_label_file_url:
+                  type:
+                  - string
+                  - 'null'
+                  format: uri
+                  description: URL to pouch label (alternative to file upload, used in onboarding)
+                pamphlet_cover_page_json:
+                  type:
+                  - object
+                  - 'null'
+                  description: JSON configuration for pamphlet cover
+                pamphlet_template_size:
+                  type: string
+                  enum:
+                  - sm
+                  - lg
+                  default: sm
+                  description: Pamphlet template size
+                label_group_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  description: Label group reference
+                pamphlet_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  description: Pamphlet asset reference
+                label_large_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  description: Large label asset reference
+                label_small_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  description: Small label asset reference
+                pouch_template_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  description: Pouch template reference
+                pouch_logo_proxy:
+                  type:
+                  - string
+                  - 'null'
+                  description: Proxy URL for pouch logo
+                sku:
+                  type:
+                  - string
+                  - 'null'
+                  description: SKU for this asset group
+                  example: PAG-001
+                display_name:
+                  type:
+                  - string
+                  - 'null'
+                  description: Display name
+                  example: Premium Wellness Pack
+                custom_template_name:
+                  type:
+                  - string
+                  - 'null'
+                  description: Custom template name
+                max_pouch_count:
+                  type: integer
+                  default: 30
+                  description: Maximum pouches per pack
+                  example: 30
+                base_packaging_asset_group_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  description: Base PAG to inherit from
+                status:
+                  type: string
+                  enum:
+                  - New
+                  - Active
+                  - Needs Review
+                  - Archived
+                  default: New
+                  description: Asset group status
+                is_approved_by_quality:
+                  type:
+                  - boolean
+                  - 'null'
+                  description: Quality approval status
+                is_operations_ready:
+                  type:
+                  - boolean
+                  - 'null'
+                  description: Operations readiness status
+                is_locked:
+                  type:
+                  - boolean
+                  - 'null'
+                  description: Lock status
+                pamphlet_schema_version:
+                  type:
+                  - string
+                  - 'null'
+                  enum:
+                  - legacy
+                  - viz_v1
+                  description: Pamphlet schema version
+                label_schema_version:
+                  type:
+                  - string
+                  - 'null'
+                  enum:
+                  - legacy
+                  - viz_v1
+                  description: Label schema version
+              example:
+                fulfillment_okc_product_ids:
+                - d290f1ee-6c54-4b01-90e6-d701748f0851
+              x-examples:
+                required-only:
+                  summary: Create with required fields only
+                  value:
+                    fulfillment_okc_product_ids:
+                    - d290f1ee-6c54-4b01-90e6-d701748f0851
+                complete:
+                  summary: Create with all common fields (excluding file uploads)
+                  value:
+                    fulfillment_okc_product_ids:
+                    - d290f1ee-6c54-4b01-90e6-d701748f0851
+                    - a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                    sku: PAG-PREMIUM-001
+                    display_name: Premium Wellness Pack
+                    max_pouch_count: 30
+                    pamphlet_template_size: lg
+                    status: New
+                    is_approved_by_quality: false
+                    is_operations_ready: false
+                    is_locked: false
+      responses:
+        '201':
+          description: Returns a created Packaging Asset Group.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - packaging_asset_group
+                properties:
+                  packaging_asset_group:
+                    $ref: '#/components/schemas/PackagingAssetGroup'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    get:
+      tags:
+      - Packaging Asset Groups
+      security:
+      - bearerAuth:
+        - product_lines/read
+      summary: List packaging asset groups.
+      operationId: listPackagingAssetGroup
+      description: List packaging asset groups.
+      parameters:
+      - $ref: '#/components/parameters/LimitParameters'
+      - $ref: '#/components/parameters/CursorParameters'
+      - $ref: '#/components/parameters/SortByParameters'
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - packaging_asset_groups
+                properties:
+                  packaging_asset_groups:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PackagingAssetGroup'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/packaging-asset-groups/count:
+    get:
+      tags:
+      - Packaging Asset Groups
+      security:
+      - bearerAuth:
+        - product_lines/read
+      summary: Count of all Packaging Asset Group
+      operationId: getPackagingAssetGroupTotalCount
+      description: Count of all packaging_asset_groups.
+      parameters:
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Count'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/packaging-asset-groups/{id}:
+    get:
+      tags:
+      - Packaging Asset Groups
+      security:
+      - bearerAuth:
+        - product_lines/read
+      summary: Get a Packaging Asset Group line.
+      operationId: getPackagingAssetGroup
+      description: Get a Packaging Asset Group.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Search results matching criteria.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  'packaging_asset_group:':
+                    $ref: '#/components/schemas/PackagingAssetGroup'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    put:
+      tags:
+      - Packaging Asset Groups
+      security:
+      - bearerAuth:
+        - product_lines/write
+      summary: Update a Packaging Asset Group.
+      operationId: updatePackagingAssetGroup
+      description: Update a Packaging Asset Group
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              description: Update a packaging asset group. Uses multipart/form-data for file uploads. All fields optional.
+              properties:
+                pamphlet_cover_image:
+                  type: string
+                  format: binary
+                  description: Cover page image file
+                pamphlet_inside_cover_image:
+                  type: string
+                  format: binary
+                  description: Inside cover image file
+                pamphlet_back_image:
+                  type: string
+                  format: binary
+                  description: Back cover image file
+                sleeve_label_large_file:
+                  type:
+                  - string
+                  - 'null'
+                  format: binary
+                  description: Large sleeve label file
+                sleeve_label_small_file:
+                  type:
+                  - string
+                  - 'null'
+                  format: binary
+                  description: Small sleeve label file
+                pouch_label_file:
+                  type:
+                  - string
+                  - 'null'
+                  format: binary
+                  description: Pouch label file
+                pamphlet_cover_page_json:
+                  type:
+                  - object
+                  - 'null'
+                  description: JSON configuration for pamphlet cover
+                pamphlet_template_size:
+                  type: string
+                  enum:
+                  - sm
+                  - lg
+                  description: Pamphlet template size
+                fulfillment_okc_product_ids:
+                  type: array
+                  description: OKC product IDs for fulfillment boxes
+                  minItems: 1
+                  items:
+                    type: string
+                    format: uuid
+                label_group_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                pamphlet_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                label_large_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                label_small_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                pouch_template_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                pouch_logo_proxy:
+                  type:
+                  - string
+                  - 'null'
+                sku:
+                  type:
+                  - string
+                  - 'null'
+                  example: PAG-001
+                display_name:
+                  type:
+                  - string
+                  - 'null'
+                  example: Premium Wellness Pack
+                custom_template_name:
+                  type:
+                  - string
+                  - 'null'
+                max_pouch_count:
+                  type: integer
+                  example: 30
+                base_packaging_asset_group_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                status:
+                  type: string
+                  enum:
+                  - New
+                  - Active
+                  - Needs Review
+                  - Archived
+                  description: Asset group status
+                is_approved_by_quality:
+                  type:
+                  - boolean
+                  - 'null'
+                is_operations_ready:
+                  type:
+                  - boolean
+                  - 'null'
+                is_locked:
+                  type:
+                  - boolean
+                  - 'null'
+                pamphlet_schema_version:
+                  type:
+                  - string
+                  - 'null'
+                  enum:
+                  - legacy
+                  - viz_v1
+                label_schema_version:
+                  type:
+                  - string
+                  - 'null'
+                  enum:
+                  - legacy
+                  - viz_v1
+              example:
+                status: Active
+              x-examples:
+                update-status:
+                  summary: Update status
+                  value:
+                    status: Active
+                    is_approved_by_quality: true
+                    is_operations_ready: true
+                update-config:
+                  summary: Update configuration
+                  value:
+                    display_name: Updated Premium Pack
+                    max_pouch_count: 45
+                lock-asset:
+                  summary: Lock asset group
+                  value:
+                    is_locked: true
+                    status: Active
+        description: Packaging Asset Group to update
+      responses:
+        '200':
+          description: Returns the updated Packaging Asset Group.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - packaging_asset_group
+                properties:
+                  packaging_asset_group:
+                    $ref: '#/components/schemas/PackagingAssetGroup'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    delete:
+      tags:
+      - Packaging Asset Groups
+      security:
+      - bearerAuth:
+        - product_lines/write
+      summary: Delete a Packaging Asset Group.
+      operationId: deletePackagingAssetGroup
+      description: Delete a Packaging Asset Group.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Confirms deletion of a Packaging Asset Group.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+components:
+  parameters:
+    SortByParameters:
+      in: query
+      name: sort_by
+      description: Sort values by a specific property. See available sort by values in the table.
+      schema:
+        type: string
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
+    LimitParameters:
+      in: query
+      name: limit
+      description: Number of results to return. Default 50, max 250.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  responses:
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+  schemas:
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+    Count:
+      allOf:
+      - type: object
+        properties:
+          count:
+            type: number
+            example: 8
+    PackagingAssetGroup:
+      allOf:
+      - allOf:
+        - type: object
+          required:
+          - created_at
+          - updated_at
+          properties:
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+        - type: object
+          required:
+          - id
+          - client_id
+          - pamphlet_cover_image_url
+          - pamphlet_inside_cover_image_url
+          - pamphlet_back_image_url
+          properties:
+            id:
+              type: string
+              format: uuid
+              readOnly: true
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            client_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            status:
+              type: string
+              enum:
+              - New
+              - Active
+              - Testing
+              - Onboarding
+              - Archived
+            sku:
+              type: string
+              example: ABCD-1236-QWERTY
+            pamphlet_cover_image_url:
+              type: string
+              format: url
+              example: https://okc-aws-bucket.com/pamphlet_cover_image-666c1d3a-17b2-488a-951a-2caa7cf21826.jpg
+            pamphlet_inside_cover_image_url:
+              type: string
+              format: url
+              example: https://okc-aws-bucket.com/pamphlet_inside_cover_image-666c1d3a-17b2-488a-951a-2caa7cf21826.jpg
+            pamphlet_back_image_url:
+              type: string
+              format: url
+              example: https://okc-aws-bucket.com/pamphlet_back_image-666c1d3a-17b2-488a-951a-2caa7cf21826.jpg
+            sleeve_label_large_file_url:
+              type: string
+              format: url
+              example: https://okc-aws-bucket.com/sleeve_label_large_file-666c1d3a-17b2-488a-951a-2caa7cf21826.pdf
+            sleeve_label_small_file_url:
+              type: string
+              format: url
+              example: https://okc-aws-bucket.com/sleeve_label_small_file-666c1d3a-17b2-488a-951a-2caa7cf21826.pdf
+            pouch_label_file_url:
+              type: string
+              format: url
+              example: https://okc-aws-bucket.com/pouch_label_file-666c1d3a-17b2-488a-951a-2caa7cf21826.pdf
+            internal_name:
+              type: string
+              example: PAG-00015
+              x-internal: true
+              description: This field is for internal use only.
+            display_name:
+              type: string
+              example: Packaging Asset Group 00015
+            pamphlet_cover_page_json:
+              type: object
+              properties:
+                template_page_name:
+                  type: string
+                  example: front_cover
+                available_placeholders:
+                  type: string
+                  example: '{"pack_name", "first_name"}'
+                template_block_content:
+                  type: string
+                  example: '{{pack_name}}'
+                placeholder_style_data:
+                  type: object
+                  properties:
+                    color:
+                      type: string
+                      example: '#000000'
+                    font-family:
+                      type: string
+                      example: Helvetica
+                    font-weight:
+                      type: string
+                      example: '700'
+                    font-size:
+                      type: string
+                      example: 24pt
+                    line-height:
+                      type: number
+                      example: 1
+                template_block_style_data:
+                  type: object
+                  properties:
+                    bottom:
+                      type: string
+                      example: 1cm
+                    left:
+                      type: string
+                      example: 0.95cm
+                    height:
+                      type: string
+                      example: auto
+                    width:
+                      type: string
+                      example: 10.46cm
+                    color:
+                      type: string
+                      example: '#000000'
+                    font-family:
+                      type: string
+                      example: Helvetica
+                    font-weight:
+                      type: string
+                      example: '400'
+                    font-size:
+                      type: string
+                      example: 24pt
+                    line-height:
+                      type: number
+                      example: 1.2
+                    font_family:
+                      type: string
+                      example: Helvetica
+                    font_url:
+                      type: string
+            pamphlet_template_size:
+              enum:
+              - sm
+              - lg
+              example: sm
+            custom_template_name:
+              type: string
+              example: my-custom-template-name
+            fulfillment_okc_product_ids:
+              type: array
+              items:
+                type: string
+                format: uuid
+                example: d290f1ee-6c54-4b01-90e6-d701748f0851
+              x-internal: true
+              description: This field is for internal use only.
+            max_pouch_count:
+              type: number
+              example: 30
+              x-internal: true
+              description: This field is for internal use only.
+            base_packaging_asset_group_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+              x-internal: true
+              description: This field is for internal use only.
+            label_group_id:
+              type: string
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            pamphlet_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            label_large_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            label_small_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            pouch_template_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            pouch_logo_proxy:
+              type: string
+              example: proxy-logo-url
+            label_schema_version:
+              type: string
+              example: v2
+            pamphlet_schema_version:
+              type: string
+              example: v2
+            is_approved_by_quality:
+              type: boolean
+              example: false
+              x-internal: true
+              description: This field is for internal use only.
+            is_operations_ready:
+              type: boolean
+              example: false
+              x-internal: true
+              description: This field is for internal use only.
+            is_locked:
+              type: boolean
+              example: false
+              x-internal: true
+              description: This field is for internal use only.
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

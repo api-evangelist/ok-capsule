@@ -1,0 +1,435 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Onboarding (Public) API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Onboarding (Public)
+paths:
+  /v2/onboarding/signup:
+    post:
+      tags:
+      - Onboarding (Public)
+      summary: Sign up a new client
+      operationId: onboardingSignUp
+      description: Sign up new client.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - business_name
+              - business_contact_firstname
+              - business_contact_lastname
+              - business_contact_email
+              - password
+              description: Create a new client account during onboarding (signup)
+              properties:
+                business_name:
+                  type: string
+                  description: Company or business name
+                  example: Wellness Supplements Inc.
+                business_contact_firstname:
+                  type: string
+                  description: Primary contact first name
+                  example: John
+                business_contact_lastname:
+                  type: string
+                  description: Primary contact last name
+                  example: Smith
+                business_contact_email:
+                  type: string
+                  format: email
+                  description: Primary contact email (used for login)
+                  example: john.smith@wellnesssupps.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  description: Account password (min 8 characters, must include uppercase, lowercase, number)
+                  example: SecureP4ss!
+                tax_id:
+                  type: string
+                  description: Tax identification number
+                  example: 12-3456789
+                locale:
+                  type: string
+                  pattern: ^[a-z]{2}-[A-Z]{2}$
+                  description: Preferred locale
+                  example: en-US
+              example:
+                business_name: Wellness Supplements Inc.
+                business_contact_firstname: John
+                business_contact_lastname: Smith
+                business_contact_email: john.smith@wellnesssupps.com
+                password: SecureP4ss!
+              x-examples:
+                required-only:
+                  summary: Signup with required fields only
+                  value:
+                    business_name: Wellness Supplements Inc.
+                    business_contact_firstname: John
+                    business_contact_lastname: Smith
+                    business_contact_email: john.smith@wellnesssupps.com
+                    password: SecureP4ss!
+                complete:
+                  summary: Signup with all fields
+                  value:
+                    business_name: Wellness Supplements Inc.
+                    business_contact_firstname: John
+                    business_contact_lastname: Smith
+                    business_contact_email: john.smith@wellnesssupps.com
+                    password: SecureP4ss!
+                    tax_id: 12-3456789
+                    locale: en-US
+            examples:
+              OnboardingSignUpSample:
+                $ref: '#/components/examples/OnboardingSignUpSample'
+      responses:
+        '201':
+          description: Returns an added OnboardingSignUp object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  client:
+                    $ref: '#/components/schemas/OnboardingSignUp'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/onboarding/confirm-account:
+    post:
+      tags:
+      - Onboarding (Public)
+      summary: Confirm new account created
+      operationId: onboardingConfirm
+      description: Confirm new account created
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - verification_code
+              description: Confirm email address during onboarding with verification code
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email address to verify
+                  example: john.smith@wellnesssupps.com
+                verification_code:
+                  type: string
+                  pattern: ^[0-9]{6}$
+                  description: 6-digit verification code sent to email
+                  example: '541874'
+              example:
+                email: john.smith@wellnesssupps.com
+                verification_code: '541874'
+            examples:
+              OnboardingConfirmSample:
+                $ref: '#/components/examples/OnboardingConfirmSample'
+      responses:
+        '201':
+          description: Returns an added OnboardingConfirm object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingConfirm'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/onboarding/resend-confirmation:
+    post:
+      tags:
+      - Onboarding (Public)
+      summary: Resend a new verification code
+      operationId: onboardingResendCode
+      description: Resend a new verification code
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              description: Resend verification code to email during onboarding
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email address to resend verification code to
+                  example: john.smith@wellnesssupps.com
+              example:
+                email: john.smith@wellnesssupps.com
+            examples:
+              OnboardingResendCodeSample:
+                $ref: '#/components/examples/OnboardingResendCodeSample'
+      responses:
+        '201':
+          description: Returns an added OnboardingResendCode object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingResendCode'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+components:
+  schemas:
+    OnboardingConfirm:
+      allOf:
+      - type: object
+        required:
+        - message
+        properties:
+          message:
+            type: string
+            example: The email 'johndoe@email.com' has been successfully verified.
+    OnboardingResendCode:
+      allOf:
+      - type: object
+        required:
+        - message
+        properties:
+          message:
+            type: string
+            example: Verification code has been sent to email 'johndoe@email.com'.
+    OnboardingSignUp:
+      allOf:
+      - type: object
+        required:
+        - id
+        - status
+        - business_name
+        - business_contact_firstname
+        - business_contact_lastname
+        - business_contact_email
+        properties:
+          id:
+            type: string
+            readOnly: true
+            format: uuid
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+          status:
+            type: string
+            enum:
+            - Active
+            - Inactive
+            - Onboarding
+            example: Onboarding
+          business_name:
+            type: string
+            example: Incorporated Company, LLC
+          tax_id:
+            type: string
+            example: 001-999-874
+          business_contact_firstname:
+            type: string
+            example: John
+          business_contact_lastname:
+            type: string
+            example: Doe
+          business_contact_email:
+            type: string
+            example: johndoe@email.com
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+  responses:
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+  examples:
+    OnboardingSignUpSample:
+      summary: Sign Up client with only required fields.
+      value:
+        business_name: Incorporated Company, LLC
+        tax_id: 123-456-789
+        business_contact_firstname: John
+        business_contact_lastname: Doe
+        business_contact_email: user@email.com
+        password: '*secretP4ssword'
+    OnboardingConfirmSample:
+      summary: Confirm client account
+      value:
+        email: johndoe@email.com
+        verification_code: '432071'
+    OnboardingResendCodeSample:
+      summary: Resend verification code
+      value:
+        email: johndoe@email.com
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

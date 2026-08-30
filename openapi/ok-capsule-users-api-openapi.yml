@@ -1,0 +1,711 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Users API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Users
+  description: Routes to manage client users
+paths:
+  /v2/users:
+    post:
+      tags:
+      - Users
+      security:
+      - bearerAuth:
+        - users/write
+      summary: Creates a user.
+      operationId: createUser
+      description: Creates a user.
+      parameters:
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              - email
+              - roles
+              properties:
+                name:
+                  type: string
+                  description: Full name of the user
+                  example: Homer Simpson
+                email:
+                  type: string
+                  format: email
+                  description: Email address (used for login)
+                  example: homer@springfield.com
+                roles:
+                  type: array
+                  description: User roles (at least one required)
+                  minItems: 1
+                  items:
+                    type: string
+                    enum:
+                    - Client_Admin
+                    - Client_Manager
+                    - Client_Developer
+                    - Client_User
+                    - Internal_Admin
+                    - Internal_Manager
+                    - Internal_Developer
+                    - Internal_User
+                  example:
+                  - Client_Manager
+                phone_number:
+                  type:
+                  - string
+                  - 'null'
+                  format: E.164
+                  description: Phone number in E.164 format
+                  example: '+12133734253'
+                locale:
+                  type:
+                  - string
+                  - 'null'
+                  pattern: ^[a-z]*-[A-Z]{2}$
+                  description: User locale preference (e.g., en-US)
+                  example: en-US
+              example:
+                name: Homer Simpson
+                email: homer@springfield.com
+                roles:
+                - Client_Manager
+              x-examples:
+                required-only:
+                  summary: Create user with required fields only
+                  value:
+                    name: Homer Simpson
+                    email: homer@springfield.com
+                    roles:
+                    - Client_Manager
+                complete:
+                  summary: Create user with all fields
+                  value:
+                    name: Homer Simpson
+                    email: homer@springfield.com
+                    roles:
+                    - Client_Admin
+                    - Client_Manager
+                    phone_number: '+12133734253'
+                    locale: en-US
+            examples:
+              UserFullSample:
+                $ref: '#/components/examples/UserFullSample'
+              UserRequiredSample:
+                $ref: '#/components/examples/UserRequiredSample'
+      responses:
+        '201':
+          description: Returns a created User object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    get:
+      tags:
+      - Users
+      security:
+      - bearerAuth:
+        - users/read
+      summary: List all users
+      operationId: listUsers
+      description: 'List all users.
+
+
+        Filterable fields:
+
+        * name
+
+        * email
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/LimitParameters'
+      - $ref: '#/components/parameters/CursorParameters'
+      - $ref: '#/components/parameters/SortByParameters'
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - users
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/users/count:
+    get:
+      tags:
+      - Users
+      security:
+      - bearerAuth:
+        - users/read
+      summary: Count of all users
+      operationId: getUserTotalCount
+      description: 'Count of all users.
+
+
+        Filterable fields:
+
+        * name
+
+        * email
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Count'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/users/{id}:
+    get:
+      tags:
+      - Users
+      security:
+      - bearerAuth:
+        - users/read
+      summary: Retrieve a user.
+      operationId: getUser
+      description: Retrieves a User object.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns the User object for a valid identifier.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    put:
+      tags:
+      - Users
+      security:
+      - bearerAuth:
+        - users/write
+      summary: Update a user
+      operationId: updateUser
+      description: Update User object
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: All fields are optional for updates
+              properties:
+                name:
+                  type: string
+                  description: Full name of the user
+                  example: Homer J. Simpson
+                email:
+                  type: string
+                  format: email
+                  description: Email address
+                  example: homer.j.simpson@springfield.com
+                roles:
+                  type: array
+                  description: User roles
+                  items:
+                    type: string
+                    enum:
+                    - Client_Admin
+                    - Client_Manager
+                    - Client_Developer
+                    - Client_User
+                    - Internal_Admin
+                    - Internal_Manager
+                    - Internal_Developer
+                    - Internal_User
+                  example:
+                  - Client_Admin
+                phone_number:
+                  type:
+                  - string
+                  - 'null'
+                  format: E.164
+                  description: Phone number in E.164 format
+                  example: '+12133734253'
+                locale:
+                  type: string
+                  pattern: ^[a-z]*-[A-Z]{2}$
+                  description: User locale preference (e.g., en-US)
+                  example: en-US
+              example:
+                name: Homer J. Simpson
+              x-examples:
+                minimal:
+                  summary: Update just the name
+                  value:
+                    name: Homer J. Simpson
+                complete:
+                  summary: Update all fields
+                  value:
+                    name: Homer J. Simpson
+                    email: homer.j.simpson@springfield.com
+                    roles:
+                    - Client_Admin
+                    - Client_Manager
+                    phone_number: '+12133734253'
+                    locale: en-US
+      responses:
+        '200':
+          description: Returns the updated User object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  client:
+                    $ref: '#/components/schemas/User'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    delete:
+      tags:
+      - Users
+      security:
+      - bearerAuth:
+        - users/write
+      summary: Delete a user
+      operationId: deleteUser
+      description: Delete a User object.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      responses:
+        '204':
+          $ref: '#/components/responses/204ConfirmDeletion'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+components:
+  examples:
+    UserFullSample:
+      summary: Creates a user with all fields.
+      value:
+        email: john@example.com
+        name: John Doe
+        roles:
+        - Client_Manager
+        phone_number: 12133734253
+        locale: en-US
+    UserRequiredSample:
+      summary: Creates a user with only the required fields.
+      value:
+        email: john@example.com
+        name: John Doe
+        roles:
+        - Client_Manager
+  parameters:
+    SortByParameters:
+      in: query
+      name: sort_by
+      description: Sort values by a specific property. See available sort by values in the table.
+      schema:
+        type: string
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
+    LimitParameters:
+      in: query
+      name: limit
+      description: Number of results to return. Default 50, max 250.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  responses:
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+    204ConfirmDeletion:
+      description: Confirms resource deletion.
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+  schemas:
+    User:
+      allOf:
+      - type: object
+        required:
+        - id
+        - client_id
+        properties:
+          id:
+            type: string
+            format: uuid
+            readOnly: true
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+          client_id:
+            type:
+            - string
+            - 'null'
+            format: uuid
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+          user_type:
+            type: string
+            enum:
+            - client
+            - internal
+            example: client
+          name:
+            type: string
+            example: John Doe
+          username:
+            type: string
+            format: uuid
+            readOnly: true
+            example: 087078ea-4b50-4a46-bb4d-322cf17db3ca
+            description: Same as id (Cognito sub)
+          email:
+            type: string
+            format: email
+            example: user@example.com
+          locale:
+            type:
+            - string
+            - 'null'
+            example: en-US
+          roles:
+            type: array
+            items:
+              type: string
+              enum:
+              - Client_Admin
+              - Client_Manager
+              - Client_Developer
+              - Client_User
+              - Internal_Admin
+              - Internal_Manager
+              - Internal_Developer
+              - Internal_User
+            example:
+            - Client_Manager
+            - Client_Developer
+          phone_number:
+            type:
+            - string
+            - 'null'
+            format: E.164
+            example: 12133734253
+          last_login:
+            type:
+            - string
+            - 'null'
+            format: date-time
+            readOnly: true
+            example: '2023-06-29T11:12:28Z'
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+    Count:
+      allOf:
+      - type: object
+        properties:
+          count:
+            type: number
+            example: 8
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

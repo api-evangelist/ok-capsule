@@ -1,0 +1,810 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Pack Builder Widget API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Pack Builder Widget
+paths:
+  /v2/pack-builders/{id}/widget:
+    get:
+      tags:
+      - Pack Builder Widget
+      security:
+      - bearerAuth: []
+      summary: Retrieves a pack builder widget
+      operationId: getPackBuilderWidget
+      description: Retrieves PackBuilderWidget object
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '200':
+          description: Returns the updated PackBuilderWidget object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: null
+                $ref: '#/components/schemas/PackBuilderWidget'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+  /v2/pack-builders/{id}/widget/products:
+    get:
+      tags:
+      - Pack Builder Widget
+      security:
+      - bearerAuth: []
+      summary: Retrieves a pack builder widget
+      operationId: getPackBuilderWidgetProducts
+      description: Retrieves PackBuilderWidgetProducts object
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - $ref: '#/components/parameters/CursorParameters'
+      responses:
+        '200':
+          description: Returns the PackBuilderWidgetProducts object.
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/PackBuilderCategoriesProductsResponse'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+  /v2/pack-builders/{id}/widget/categories-products:
+    get:
+      tags:
+      - Pack Builder Widget
+      security:
+      - bearerAuth: []
+      summary: Retrieves a pack builder widget categories products
+      operationId: getPackBuilderWidgetCategoriesProducts
+      description: Retrieves PackBuilderWidgetCategoriesProducts object
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '200':
+          description: Returns the PackBuilderCategoriesProducts object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pack_builder_category_products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PackBuilderCategoriesProducts'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+  /v2/pack-builders/{id}/widget/categories:
+    get:
+      tags:
+      - Pack Builder Widget
+      security:
+      - bearerAuth: []
+      summary: Retrieves a pack builder widget
+      operationId: getPackBuilderWidgetCategories
+      description: Retrieves PackBuilderCategories object
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - pack_builder_categories
+                properties:
+                  pack_builder_categories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PackBuilderCategoryWidget'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+  /v2/pack-builders/{id}/widget/categories/{categoryId}/products:
+    get:
+      tags:
+      - Pack Builder Widget
+      security:
+      - bearerAuth: []
+      summary: Retrieves a pack builder widget
+      operationId: getPackBuilderWidgetProductsCategories
+      description: Retrieves PackBuilderProducts object
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: path
+        name: categoryId
+        required: true
+        schema:
+          type: string
+          minimum: 1
+      responses:
+        '200':
+          description: Returns the PackBuilderWidgetProducts object.
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/PackBuilderCategoriesProductsResponse'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+components:
+  schemas:
+    PackBuilderCategoriesProducts:
+      allOf:
+      - type: object
+        required:
+        - id
+        - client_id
+        - product_line
+        - category_name
+        - products
+        properties:
+          id:
+            type: string
+            format: uuid
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+          category_name:
+            type: string
+            example: Energy
+          products:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                client_product_id:
+                  type: string
+                  format: uuid
+                  example: c5cbabe9-6ec9-4f1e-84a3-11cdd691cd95
+                product_id:
+                  type: string
+                  format: uuid
+                  example: 28a3c700-a794-4ba9-9690-6d91ecc9b36e
+                name:
+                  type: string
+                price_per_pill:
+                  type: number
+                description:
+                  type: string
+                image:
+                  type: string
+                  example: ''
+                time_of_administration:
+                  type: string
+                  enum:
+                  - Morning
+                  - Midday
+                  - Evening
+                  example: Morning
+                serving_size:
+                  type: integer
+                  example: 1
+                pill_type:
+                  type: string
+                  example: Capsule(s)
+                product_status:
+                  type: string
+                  example: active
+                client_product_active:
+                  type: boolean
+                  example: true
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+    PackBuilderCategoryWidget:
+      allOf:
+      - type: object
+        required:
+        - id
+        - client_id
+        - product_line
+        - category_name
+        properties:
+          id:
+            type: string
+            format: uuid
+            example: 69d58301-84c2-447d-9064-3326d14beed7
+          category_name:
+            type: string
+            example: Energy
+          position:
+            type: number
+            example: 2
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
+    PackBuilderCategoriesProductsResponse:
+      allOf:
+      - type: object
+        properties:
+          pack_builder_products:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                client_product_id:
+                  type: string
+                  format: uuid
+                  example: c5cbabe9-6ec9-4f1e-84a3-11cdd691cd95
+                product_id:
+                  type: string
+                  format: uuid
+                  example: 28a3c700-a794-4ba9-9690-6d91ecc9b36e
+                name:
+                  type: string
+                price_per_pill:
+                  type: number
+                description:
+                  type: string
+                image:
+                  type: string
+                  example: ''
+                time_of_administration:
+                  type: string
+                  enum:
+                  - Morning
+                  - Midday
+                  - Evening
+                  example: Morning
+                serving_size:
+                  type: integer
+                  example: 1
+                pill_type:
+                  type: string
+                  example: Capsule(s)
+                product_status:
+                  type: string
+                  example: active
+                client_product_active:
+                  type: boolean
+                  example: true
+          next_cursor:
+            type: string
+            example: eyJmb3J3YXJkIjp0cnVlLCJvcmRlciI6WyJjcmVhdGVkX2F0IiwiREVTQyJdLCJwYWdlX2luZm8iOlt7ImZpZWxkIjoiY3JlYXRlZF9hdCIsInZhbHVlIjoiMjAyMS0wNS0xN1QyMDoxODo1OC4wMDBaIiwicG9zaXRpb24iOjEsImN1c3RvbUxpdGVyYWwiOiJjbGllbnRfcHJvZHVjdFwiLlwiY3JlYXRlZF9hdCJ9LHsiZmllbGQiOiJpZCIsInZhbHVlIjoiM2FiOTIwZTYtOWQ1OS00ZjMzLWFlYTAtNTA0NWY3MjZkYWZiIiwicG9zaXRpb24iOjAsImN1c3RvbUxpdGVyYWwiOiJjbGllbnRfcHJvZHVjdFwiLlwiaWQifV19
+          prev_cursor:
+            type: string
+            example: eyJmb3J3YXJkIjpmYWxzZSwib3JkZXIiOlsiY3JlYXRlZF9hdCIsIkRFU0MiXSwicGFnZV9pbmZvIjpbeyJmaWVsZCI6ImNyZWF0ZWRfYXQiLCJ2YWx1ZSI6IjIwMjEtMDUtMTdUMjA6MTg6NTguMDAwWiIsInBvc2l0aW9uIjoxLCJjdXN0b21MaXRlcmFsIjoiY2xpZW50X3Byb2R1Y3RcIi5cImNyZWF0ZWRfYXQifSx7ImZpZWxkIjoiaWQiLCJ2YWx1ZSI6IjNhYjkyMGU2LTlkNTktNGYzMy1hZWEwLTUwNDVmNzI2ZGFmYiIsInBvc2l0aW9uIjowLCJjdXN0b21MaXRlcmFsIjoiY2xpZW50X3Byb2R1Y3RcIi5cImlkIn1dfQ==
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+    PackBuilderWidget:
+      allOf:
+      - type: object
+        required:
+        - id
+        - pack_builder_id
+        - category_settings
+        - visual_settings
+        properties:
+          pack_builder:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: 47e4f05e-dc3c-4353-9dec-64139c65cddf
+              name:
+                type: string
+                example: Pack Builder Test
+              description:
+                type: string
+                example: additional data / store name
+              type:
+                enum:
+                - API
+                - Shopify
+                - BigCommerce
+                type: string
+                example: API
+              checkout_url:
+                type: string
+                format: url
+                example: https://www.vitaminshop.com/checkout
+              admin_link:
+                type: string
+                format: url
+                example: https://admin.shopify.com/store/my-store-name
+          category_settings:
+            type: object
+            required:
+            - enable_product_categories
+            - category_selection_behavior
+            - category_menu_selection_behavior
+            - category_menu_text_align
+            properties:
+              enable_product_categories:
+                type: boolean
+                example: true
+              category_selection_behavior:
+                type: string
+                enum:
+                - scroll
+                - filter
+                example: scroll
+              category_menu_selection_behavior:
+                type: string
+                enum:
+                - bold
+                - underline
+                - fill
+                example: bold
+              category_menu_text_align:
+                type: string
+                enum:
+                - left
+                - center
+                - right
+                example: left
+          visual_settings:
+            type: object
+            required:
+            - layout
+            - product_cards
+            - typography
+            - colors
+            - buttons
+            - copy
+            properties:
+              layout:
+                type: object
+                required:
+                - product_view
+                - screen_width
+                - drawer_settings
+                - modal_mode
+                - override
+                properties:
+                  product_view:
+                    type: string
+                    enum:
+                    - grid
+                    - list
+                    example: grid
+                  screen_width:
+                    type: string
+                    enum:
+                    - fixed
+                    - flex
+                    example: fixed
+                  drawer_settings:
+                    type: string
+                    enum:
+                    - temporary
+                    - permanent
+                    example: permanent
+                  modal_mode:
+                    type: string
+                    enum:
+                    - basic
+                    - advanced
+                    example: basic
+                  override:
+                    type: boolean
+                    example: false
+              product_cards:
+                type: object
+                required:
+                - image_aspect_ratio
+                - image_corners
+                - cycle_length
+                - show_icon_labels
+                - cart_item_spacing_style
+                - override
+                properties:
+                  image_aspect_ratio:
+                    type: string
+                    enum:
+                    - '1:1'
+                    - '4:3'
+                    example: '1:1'
+                  image_corners:
+                    type: string
+                    enum:
+                    - rounded
+                    - square
+                    example: rounded
+                  cycle_length:
+                    type: number
+                    enum:
+                    - 7
+                    - 10
+                    example: 7
+                  show_icon_labels:
+                    type: boolean
+                    example: false
+                  cart_item_spacing_style:
+                    type: string
+                    enum:
+                    - default
+                    - compact
+                    - comfortable
+                    example: compact
+                  override:
+                    type: boolean
+                    example: false
+              typography:
+                type: object
+                required:
+                - text_size
+                - header_font
+                - body_font
+                - link_style
+                - override
+                properties:
+                  text_size:
+                    type: string
+                    enum:
+                    - small
+                    - medium
+                    - large
+                    example: small
+                  header_font:
+                    type: object
+                    required:
+                    - font_family
+                    - font_weight
+                    properties:
+                      font_family:
+                        type: string
+                        example: Open Sand
+                      font_weight:
+                        type: string
+                        example: bold
+                  body_font:
+                    type: object
+                    required:
+                    - font_family
+                    - font_weight
+                    properties:
+                      font_family:
+                        type: string
+                        example: Open Sand
+                      font_weight:
+                        type: string
+                        example: regular
+                  link_style:
+                    type: string
+                    enum:
+                    - underline
+                    - bold
+                    - normal
+                    example: underline
+                  override:
+                    type: boolean
+                    example: false
+              colors:
+                type: object
+                required:
+                - primary_fill
+                - secondary_fill
+                - buttons
+                - icons
+                - header_text
+                - body_text
+                - links
+                - dividers
+                - override
+                properties:
+                  primary_fill:
+                    type: string
+                    example: '#000000'
+                  secondary_fill:
+                    type: string
+                    example: '#000000'
+                  buttons:
+                    type: string
+                    example: '#000000'
+                  icons:
+                    type: string
+                    example: '#000000'
+                  header_text:
+                    type: string
+                    example: '#000000'
+                  body_text:
+                    type: string
+                    example: '#000000'
+                  links:
+                    type: string
+                    example: '#000000'
+                  dividers:
+                    type: string
+                    example: '#000000'
+                  override:
+                    type: boolean
+                    example: false
+              buttons:
+                type: object
+                required:
+                - corner_style
+                - ripple_effect
+                - checkout_button_text
+                - override
+                properties:
+                  corner_style:
+                    type: string
+                    enum:
+                    - square
+                    - round
+                    - soft
+                    example: round
+                  ripple_effect:
+                    type: boolean
+                    example: false
+                  checkout_button_text:
+                    type: string
+                    example: ''
+                  override:
+                    type: boolean
+                    example: false
+              copy:
+                type: object
+                required:
+                - empty_cart_message
+                - error_message
+                properties:
+                  empty_cart_message:
+                    type: string
+                    example: ''
+                  error_message:
+                    type: string
+                    example: ''
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+  parameters:
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

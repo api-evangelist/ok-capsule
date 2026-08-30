@@ -1,0 +1,1054 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Pack Builder API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Pack Builder
+paths:
+  /v2/pack-builders:
+    post:
+      tags:
+      - Pack Builder
+      security:
+      - bearerAuth: []
+      summary: Creates a pack builder.
+      operationId: createPackBuilder
+      description: Creates a pack builder.
+      parameters:
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              - type
+              description: Create a new pack builder for customized vitamin pack ordering
+              properties:
+                name:
+                  type: string
+                  description: Name of the pack builder
+                  example: My Vitamin Store Pack Builder
+                type:
+                  type: string
+                  enum:
+                  - API
+                  - Shopify
+                  - BigCommerce
+                  description: Integration type
+                  example: Shopify
+                description:
+                  type:
+                  - string
+                  - 'null'
+                  description: Description or store URL
+                  example: myvitaminstore.myshopify.com
+                product_line_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  description: Associated product line
+                  example: 0d3456fb-0f3c-4859-bcfa-52bff2c8f0a8
+                checkout_url:
+                  type: string
+                  format: uri
+                  description: Checkout URL (required for API type)
+                  example: https://www.vitaminshop.com/checkout
+                admin_link:
+                  type:
+                  - string
+                  - 'null'
+                  format: uri
+                  description: Admin panel link
+                  example: https://admin.shopify.com/store/my-store-name
+                packaging_asset_group_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  description: Default packaging asset group
+                  example: c6de9100-e8b2-4032-80e2-3743deda83d2
+                default_pack_name:
+                  type:
+                  - string
+                  - 'null'
+                  description: Default name for packs
+                  example: Daily Wellness Pack
+              example:
+                name: My Vitamin Store
+                type: Shopify
+              x-examples:
+                api-type:
+                  summary: Create API pack builder (checkout_url required)
+                  value:
+                    name: API Integration Store
+                    type: API
+                    checkout_url: https://www.vitaminshop.com/checkout
+                    description: Custom API integration
+                shopify-type:
+                  summary: Create Shopify pack builder
+                  value:
+                    name: My Shopify Store
+                    type: Shopify
+                    description: mystore.myshopify.com
+                    admin_link: https://admin.shopify.com/store/mystore
+                complete:
+                  summary: Create with all fields
+                  value:
+                    name: Premium Wellness Store
+                    type: Shopify
+                    description: premiumwellness.myshopify.com
+                    product_line_id: 0d3456fb-0f3c-4859-bcfa-52bff2c8f0a8
+                    checkout_url: https://premiumwellness.com/checkout
+                    admin_link: https://admin.shopify.com/store/premiumwellness
+                    packaging_asset_group_id: c6de9100-e8b2-4032-80e2-3743deda83d2
+                    default_pack_name: Daily Wellness Pack
+            examples:
+              PackBuilderSample:
+                $ref: '#/components/examples/PackBuilderSample'
+      responses:
+        '201':
+          description: Returns a created PackBuilder object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pack_builder:
+                    $ref: '#/components/schemas/PackBuilder'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    get:
+      tags:
+      - Pack Builder
+      security:
+      - bearerAuth: []
+      summary: List all pack builders
+      operationId: listPackBuilders
+      description: 'List all pack builders.
+
+
+        Filterable fields:
+
+        * name
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/LimitParameters'
+      - $ref: '#/components/parameters/CursorParameters'
+      - $ref: '#/components/parameters/SortByParameters'
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - pack_builders
+                properties:
+                  pack_builders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PackBuilder'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/pack-builders/{id}:
+    get:
+      tags:
+      - Pack Builder
+      security:
+      - bearerAuth: []
+      summary: Retrieve a pack builder.
+      operationId: getPackBuilder
+      description: Retrieves a PackBuilder object.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns the PackBuilder object for a valid identifier.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pack_builder:
+                    $ref: '#/components/schemas/PackBuilder'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    put:
+      tags:
+      - Pack Builder
+      security:
+      - bearerAuth: []
+      summary: Update a pack builder
+      operationId: updatePackBuilder
+      description: Update a pack builder object
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Update a pack builder. All fields optional.
+              properties:
+                name:
+                  type: string
+                  description: Name of the pack builder
+                  example: Updated Store Name
+                description:
+                  type:
+                  - string
+                  - 'null'
+                  description: Description or store URL
+                  example: updatedstore.myshopify.com
+                product_line_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  description: Associated product line
+                  example: 0d3456fb-0f3c-4859-bcfa-52bff2c8f0a8
+                checkout_url:
+                  type:
+                  - string
+                  - 'null'
+                  format: uri
+                  description: Checkout URL (required for API type pack builders)
+                  example: https://www.vitaminshop.com/checkout
+                admin_link:
+                  type:
+                  - string
+                  - 'null'
+                  format: uri
+                  description: Admin panel link
+                  example: https://admin.shopify.com/store/my-store-name
+                packaging_asset_group_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  description: Default packaging asset group
+                  example: c6de9100-e8b2-4032-80e2-3743deda83d2
+                default_pack_name:
+                  type:
+                  - string
+                  - 'null'
+                  description: Default name for packs
+                  example: Updated Pack Name
+              example:
+                name: Updated Store Name
+              x-examples:
+                rename:
+                  summary: Rename pack builder
+                  value:
+                    name: New Store Name
+                update-checkout:
+                  summary: Update checkout URL
+                  value:
+                    checkout_url: https://newcheckout.com/cart
+                update-packaging:
+                  summary: Update default packaging
+                  value:
+                    packaging_asset_group_id: c6de9100-e8b2-4032-80e2-3743deda83d2
+                    default_pack_name: Premium Daily Pack
+                complete:
+                  summary: Update all fields
+                  value:
+                    name: Premium Wellness Store V2
+                    description: premiumwellness-v2.myshopify.com
+                    product_line_id: 0d3456fb-0f3c-4859-bcfa-52bff2c8f0a8
+                    checkout_url: https://premiumwellness.com/checkout-v2
+                    admin_link: https://admin.shopify.com/store/premiumwellness-v2
+                    packaging_asset_group_id: c6de9100-e8b2-4032-80e2-3743deda83d2
+                    default_pack_name: Daily Wellness Pack V2
+      responses:
+        '200':
+          description: Returns the updated PackBuilder object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pack_builder:
+                    $ref: '#/components/schemas/PackBuilder'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    delete:
+      tags:
+      - Pack Builder
+      security:
+      - bearerAuth: []
+      summary: Delete a pack builder
+      operationId: deletePackBuilder
+      description: Delete a PackBuilder object.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      responses:
+        '204':
+          $ref: '#/components/responses/204ConfirmDeletion'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+  /v2/pack-builders/{id}/all-products:
+    get:
+      tags:
+      - Pack Builder
+      security:
+      - bearerAuth: []
+      summary: Retrieve a pack builder products.
+      operationId: getPackBuilderAllProducts
+      description: Retrieves a PackBuilderProducts object.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '200':
+          description: Returns the PackBuilder object for a valid identifier.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pack_builder_all_products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+  /v2/pack-builders/{id}/no-mapped-products:
+    get:
+      tags:
+      - Pack Builder
+      security:
+      - bearerAuth: []
+      summary: Retrieve the products that belong to pack builder but not yet mapped.
+      operationId: getPackBuilderNoMappedProducts
+      description: Retrieves the products that belong to pack builder but not yet mapped.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '200':
+          description: Returns the Product object for a valid identifier.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pack_builder_no_mapped_products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+  /v2/pack-builders/connect-client:
+    post:
+      tags:
+      - Pack Builder
+      security:
+      - bearerAuth: []
+      summary: Connect pack builder to client
+      operationId: connectPackBuilder
+      description: Connect pack builder to client.
+      parameters:
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - pack_builder_id
+              description: Connect or disconnect a client from a pack builder
+              properties:
+                pack_builder_id:
+                  type: string
+                  format: uuid
+                  description: Pack builder ID to connect/disconnect
+                  example: 83783f06-73ea-4963-9370-9eb56addd0e0
+              example:
+                pack_builder_id: 83783f06-73ea-4963-9370-9eb56addd0e0
+      responses:
+        '200':
+          description: Returns a PackBuilder object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pack_builder:
+                    $ref: '#/components/schemas/PackBuilder'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/pack-builders/disconnect-client:
+    post:
+      tags:
+      - Pack Builder
+      security:
+      - bearerAuth: []
+      summary: Disconnect pack builder from client
+      operationId: disconnectPackBuilder
+      description: Disconnect pack builder from client.
+      parameters:
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - pack_builder_id
+              description: Connect or disconnect a client from a pack builder
+              properties:
+                pack_builder_id:
+                  type: string
+                  format: uuid
+                  description: Pack builder ID to connect/disconnect
+                  example: 83783f06-73ea-4963-9370-9eb56addd0e0
+              example:
+                pack_builder_id: 83783f06-73ea-4963-9370-9eb56addd0e0
+      responses:
+        '200':
+          description: Returns a PackBuilder object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pack_builder:
+                    $ref: '#/components/schemas/PackBuilderWithoutClientId'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+components:
+  examples:
+    PackBuilderSample:
+      summary: Create pack builder.
+      value:
+        name: Pack Builder 1
+        description: My cool pack builder
+        product_line_id: 0d3456fb-0f3c-4859-bcfa-52bff2c8f0a8
+        type: API
+        checkout_url: https://www.vitaminshop.com/checkout
+        admin_link: https://admin.shopify.com/store/my-store-name
+        packaging_asset_group_id: c6de9100-e8b2-4032-80e2-3743deda83d2
+        default_pack_name: Sleep Pack
+  parameters:
+    SortByParameters:
+      in: query
+      name: sort_by
+      description: Sort values by a specific property. See available sort by values in the table.
+      schema:
+        type: string
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
+    LimitParameters:
+      in: query
+      name: limit
+      description: Number of results to return. Default 50, max 250.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  responses:
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+    204ConfirmDeletion:
+      description: Confirms resource deletion.
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+  schemas:
+    Product:
+      allOf:
+      - allOf:
+        - type: object
+          required:
+          - created_at
+          - updated_at
+          properties:
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            client_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            okc_product_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            product_line_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            client_custom_product_id:
+              type: string
+            client_sku:
+              type: string
+            client_upc:
+              type: string
+            name:
+              type: string
+            active:
+              type: boolean
+            price_per_pill:
+              type: number
+            serving_size:
+              type: integer
+            time_of_administration:
+              type: string
+            long_description:
+              type: string
+            product_name:
+              type: string
+              maxLength: 27
+            short_description:
+              type: string
+            key_points:
+              type: string
+              example: Supports immune health
+            custom_text_1:
+              type: string
+              example: Custom field 1
+            custom_text_2:
+              type: string
+              example: Custom field 2
+            custom_text_3:
+              type: string
+              example: Custom field 3
+            price_per_unit:
+              type:
+              - number
+              - 'null'
+              format: decimal
+              example: 1.25
+              description: Price per individual unit of this product.
+            is_standalone_kit:
+              type: boolean
+              default: false
+              example: false
+              description: Indicates this client product is a standalone kit.
+            product_assembly_type:
+              type: string
+              enum:
+              - PRODUCT
+              - ASSEMBLY
+              - SET
+            sfp_version:
+              type: string
+              example: v2
+              maxLength: 5
+            packaging_asset_group_id:
+              type: string
+              format: uuid
+              example: c6de9100-e8b2-4032-80e2-3743deda83d2
+            protocol_id:
+              type: string
+              format: uuid
+              example: f4e5d6c7-b8a9-0c1d-2e3f-4a5b6c7d8e9f
+            crm_id:
+              type: string
+              x-internal: true
+              description: Internal use only.
+              example: ABCDE12587AHSNNHS
+            okc_product:
+              type:
+              - object
+              - 'null'
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                product_family:
+                  type: string
+                  example: Supplement - Standard
+                supplement_category:
+                  type: string
+                  example: Vitamins
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+    PackBuilderWithoutClientId:
+      allOf:
+      - type: object
+        required:
+        - name
+        - product_line
+        - type
+        properties:
+          id:
+            type: string
+            format: uuid
+            example: 47e4f05e-dc3c-4353-9dec-64139c65cddf
+          client_id:
+            type: string
+            format: uuid
+            example: null
+          name:
+            type: string
+            example: Pack Builder Test
+          description:
+            type: string
+            example: additional data / store name
+          product_line:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: 0d3456fb-0f3c-4859-bcfa-52bff2c8f0a8
+              name:
+                type: string
+                example: ProductLine1
+          type:
+            enum:
+            - API
+            - Shopify
+            - BigCommerce
+            type: string
+            example: API
+          checkout_url:
+            type: string
+            format: url
+            example: https://www.vitaminshop.com/checkout
+          api_widget_code:
+            type: string
+            example: <div id='okc-pack-builder' pack-builder-id='47e4f05e-dc3c-4353-9dec-64139c65cddf' />
+          api_widget_js:
+            type: string
+            example: <script type='module' crossorigin src='https://assets.na1-dev.okcapsule.app/pack-builder-widget/assets/pack-builder.js'></script>
+          api_widget_css:
+            type: string
+            example: <link rel='stylesheet' href='https://assets.na1-dev.okcapsule.app/pack-builder-widget/assets/pack-builder.css'>
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+    PackBuilder:
+      allOf:
+      - allOf:
+        - type: object
+          required:
+          - created_at
+          - updated_at
+          properties:
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+        - type: object
+          required:
+          - name
+          - product_line
+          - type
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 47e4f05e-dc3c-4353-9dec-64139c65cddf
+            client_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            name:
+              type: string
+              example: Pack Builder Test
+            description:
+              type: string
+              example: additional data / store name
+            product_line:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: 0d3456fb-0f3c-4859-bcfa-52bff2c8f0a8
+                name:
+                  type: string
+                  example: ProductLine1
+                default_orderline_duration:
+                  type:
+                  - integer
+                  - 'null'
+                  example: 30
+            type:
+              enum:
+              - API
+              - Shopify
+              - BigCommerce
+              type: string
+              example: API
+            checkout_url:
+              type: string
+              format: url
+              example: https://www.vitaminshop.com/checkout
+            admin_link:
+              type: string
+              format: url
+              example: https://admin.shopify.com/store/my-store-name
+            api_widget_code:
+              type: string
+              example: <div id='okc-pack-builder' pack-builder-id='47e4f05e-dc3c-4353-9dec-64139c65cddf' />
+            api_widget_js:
+              type: string
+              example: <script type='module' crossorigin src='https://assets.na1-dev.okcapsule.app/pack-builder-widget/assets/pack-builder.js'></script>
+            api_widget_css:
+              type: string
+              example: <link rel='stylesheet' href='https://assets.na1-dev.okcapsule.app/pack-builder-widget/assets/pack-builder.css'>
+            packaging_asset_group_id:
+              type: string
+              format: uuid
+              example: c6de9100-e8b2-4032-80e2-3743deda83d2
+            default_pack_name:
+              type: string
+              example: Sleep Pack
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

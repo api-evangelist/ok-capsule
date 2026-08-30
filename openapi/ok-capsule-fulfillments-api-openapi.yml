@@ -1,0 +1,978 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Fulfillments API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Fulfillments
+  description: Routes to manage fulfillments
+paths:
+  /v2/fulfillments:
+    post:
+      tags:
+      - Fulfillments
+      summary: Creates a fulfillment.
+      operationId: createFulfillment
+      description: Creates a fulfillment. Only internal users can Creates a fulfillment. Must pass client id in query parameter.
+      parameters:
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+          example: client_id:14ae0a8b-f2fa-436c-b652-69a88117df46
+        required: true
+      security:
+      - bearerAuth:
+        - fulfillments/write
+      responses:
+        '201':
+          description: Returns a created Fulfillment object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fulfillment:
+                    $ref: '#/components/schemas/Fulfillment'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - order_id
+              - consumer_id
+              - order_lines
+              properties:
+                order_id:
+                  type: string
+                  format: uuid
+                  description: The order this fulfillment belongs to
+                  example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                consumer_id:
+                  type: string
+                  format: uuid
+                  description: The consumer receiving this fulfillment
+                  example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                order_lines:
+                  type: array
+                  description: Order lines included in this fulfillment
+                  items:
+                    type: object
+                    required:
+                    - id
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                delivery_date:
+                  type: string
+                  format: date-time
+                  description: Expected or actual delivery date
+                  example: '2024-03-20T09:12:28Z'
+                pickup_date:
+                  type: string
+                  format: date-time
+                  description: Date when package was picked up by carrier
+                  example: '2024-03-18T14:30:00Z'
+                tracking_info:
+                  type: object
+                  description: Shipping tracking information (all fields optional)
+                  properties:
+                    shipping_carrier:
+                      type: string
+                      description: Name of the shipping carrier
+                      example: FedEx
+                    shipping_method:
+                      type: string
+                      description: Shipping service level
+                      example: Ground
+                    tracking_number:
+                      type: string
+                      description: Carrier tracking number
+                      example: '794644790148'
+                    tracking_url:
+                      type: string
+                      format: uri
+                      description: URL to track the shipment
+                      example: https://www.fedex.com/fedextrack/?trknbr=794644790148
+                shipper_okc_product_id:
+                  type: string
+                  format: uuid
+                  description: OKC product ID for the shipper box
+                  example: f1e2d3c4-b5a6-7890-1234-567890abcdef
+                shipping_net_charge:
+                  type: number
+                  description: Net shipping charge amount
+                  example: 12.5
+                shipping_charge_model:
+                  type: string
+                  enum:
+                  - flat_rate
+                  - cost_plus
+                  description: How shipping charges are calculated
+                  example: flat_rate
+                status_id:
+                  type: integer
+                  description: Fulfillment status ID
+                  example: 1
+                external_fulfillment_id:
+                  type: string
+                  description: External system fulfillment identifier
+                  example: EXT-FUL-12345
+                external_label_id:
+                  type: string
+                  description: External system label identifier
+                  example: LABEL-98765
+                in_manifest:
+                  type: boolean
+                  description: Whether this fulfillment is included in a manifest
+                  example: false
+              example:
+                order_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+                consumer_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                order_lines:
+                - id: f1e2d3c4-b5a6-7890-1234-567890abcdef
+              x-examples:
+                complete:
+                  summary: Fulfillment with all fields
+                  value:
+                    order_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+                    consumer_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                    order_lines:
+                    - id: f1e2d3c4-b5a6-7890-1234-567890abcdef
+                    delivery_date: '2024-03-20T09:12:28Z'
+                    pickup_date: '2024-03-18T14:30:00Z'
+                    tracking_info:
+                      shipping_carrier: FedEx
+                      shipping_method: Ground
+                      tracking_number: '794644790148'
+                      tracking_url: https://www.fedex.com/fedextrack/?trknbr=794644790148
+                    shipper_okc_product_id: f1e2d3c4-b5a6-7890-1234-567890abcdef
+                    shipping_net_charge: 12.5
+                    shipping_charge_model: flat_rate
+                    status_id: 1
+                    external_fulfillment_id: EXT-FUL-12345
+                    external_label_id: LABEL-98765
+                    in_manifest: false
+            examples:
+              FulfillmentFullExample:
+                $ref: '#/components/examples/FulfillmentFullSample'
+        description: Fulfillment to create
+    get:
+      tags:
+      - Fulfillments
+      security:
+      - bearerAuth:
+        - fulfillments/read
+      summary: List all fulfillments.
+      operationId: listFulfillments
+      description: 'List all fulfillments.
+
+
+        Filterable fields:
+
+        * ALL
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/LimitParameters'
+      - $ref: '#/components/parameters/CursorParameters'
+      - $ref: '#/components/parameters/SortByParameters'
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - fulfillments
+                properties:
+                  fulfillments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Fulfillment'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/fulfillments/count:
+    get:
+      tags:
+      - Fulfillments
+      security:
+      - bearerAuth:
+        - fulfillments/read
+      summary: Count of all fulfillments
+      operationId: getFulfillmentTotalCount
+      description: 'Count of all fulfillments.
+
+
+        Filterable fields:
+
+        * ALL
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Count'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/orders/{id}/fulfillments:
+    get:
+      tags:
+      - Fulfillments
+      security:
+      - bearerAuth:
+        - fulfillments/read
+      summary: Retrieve fulfillments for an order
+      operationId: getOrderFulfillments
+      description: Retrieve fulfillments for an order.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - $ref: '#/components/parameters/LimitParameters'
+      - $ref: '#/components/parameters/CursorParameters'
+      - $ref: '#/components/parameters/SortByParameters'
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Returns a list of fulfillments for a specific order.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - fulfillments
+                properties:
+                  fulfillments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Fulfillment'
+  /v2/fulfillments/{id}:
+    get:
+      tags:
+      - Fulfillments
+      security:
+      - bearerAuth:
+        - fulfillments/read
+      summary: Retrieve a fulfillment.
+      operationId: getFulfillment
+      description: Retrieve a fulfillment.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns the Fulfillment object for a valid identifier.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fulfillment:
+                    $ref: '#/components/schemas/Fulfillment'
+    put:
+      tags:
+      - Fulfillments
+      security:
+      - bearerAuth:
+        - fulfillments/write
+      summary: Update a fulfillment
+      operationId: updateFulfillment
+      description: Update Fulfillment object
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+          example: client_id:14ae0a8b-f2fa-436c-b652-69a88117df46
+        required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: All fields are optional for updates
+              properties:
+                consumer_id:
+                  type: string
+                  format: uuid
+                  description: The consumer receiving this fulfillment
+                  example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                delivery_date:
+                  type: string
+                  format: date-time
+                  description: Expected or actual delivery date
+                  example: '2024-03-20T09:12:28Z'
+                pickup_date:
+                  type: string
+                  format: date-time
+                  description: Date when package was picked up by carrier
+                  example: '2024-03-18T14:30:00Z'
+                tracking_info:
+                  type: object
+                  description: Shipping tracking information (all fields optional)
+                  properties:
+                    shipping_carrier:
+                      type: string
+                      description: Name of the shipping carrier
+                      example: FedEx
+                    shipping_method:
+                      type: string
+                      description: Shipping service level
+                      example: Ground
+                    tracking_number:
+                      type: string
+                      description: Carrier tracking number
+                      example: '794644790148'
+                    tracking_url:
+                      type: string
+                      format: uri
+                      description: URL to track the shipment
+                      example: https://www.fedex.com/fedextrack/?trknbr=794644790148
+                shipper_okc_product_id:
+                  type: string
+                  format: uuid
+                  description: OKC product ID for the shipper box
+                  example: f1e2d3c4-b5a6-7890-1234-567890abcdef
+                shipping_net_charge:
+                  type: number
+                  description: Net shipping charge amount
+                  example: 12.5
+                shipping_charge_model:
+                  type: string
+                  enum:
+                  - flat_rate
+                  - cost_plus
+                  description: How shipping charges are calculated
+                  example: flat_rate
+                weight:
+                  type: number
+                  description: Package weight
+                  example: 2.5
+                external_fulfillment_id:
+                  type: string
+                  description: External system fulfillment identifier
+                  example: EXT-FUL-12345
+                external_label_id:
+                  type: string
+                  description: External system label identifier
+                  example: LABEL-98765
+                in_manifest:
+                  type: boolean
+                  description: Whether this fulfillment is included in a manifest
+                  example: false
+              example:
+                tracking_info:
+                  tracking_number: '794644790148'
+                  tracking_url: https://www.fedex.com/fedextrack/?trknbr=794644790148
+              x-examples:
+                complete:
+                  summary: Update with all fields
+                  value:
+                    consumer_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                    delivery_date: '2024-03-20T09:12:28Z'
+                    pickup_date: '2024-03-18T14:30:00Z'
+                    tracking_info:
+                      shipping_carrier: FedEx
+                      shipping_method: Ground
+                      tracking_number: '794644790148'
+                      tracking_url: https://www.fedex.com/fedextrack/?trknbr=794644790148
+                    shipper_okc_product_id: f1e2d3c4-b5a6-7890-1234-567890abcdef
+                    shipping_net_charge: 12.5
+                    shipping_charge_model: flat_rate
+                    weight: 2.5
+                    external_fulfillment_id: EXT-FUL-12345
+                    external_label_id: LABEL-98765
+                    in_manifest: true
+      responses:
+        '200':
+          description: Returns the updated Fulfillment object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fulfillment:
+                    $ref: '#/components/schemas/Fulfillment'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    delete:
+      tags:
+      - Fulfillments
+      security:
+      - bearerAuth:
+        - fulfillments/write
+      summary: Delete a fulfillment
+      operationId: deleteFulfillment
+      description: Delete a fulfillment.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+          example: client_id:14ae0a8b-f2fa-436c-b652-69a88117df46
+        required: true
+      responses:
+        '204':
+          $ref: '#/components/responses/204ConfirmDeletion'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+  /v2/fulfillments/{id}/label:
+    get:
+      tags:
+      - Fulfillments
+      security:
+      - bearerAuth:
+        - fulfillments/read
+      summary: Retrieve a fulfillment signed label url.
+      operationId: getFulfillmentLabelUrl
+      description: Retrieve a fulfillment signed label url.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns the Fulfillment signed label url object for a valid identifier.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  label_url:
+                    type: string
+                    format: url
+                    example: https://okc-label-bucket.s3.amazonaws.com/fc69b371-0441-4e52-84ed-153c0205e48b/bb3ac65b-f307-47b8-820b-30bf1427b43d/OR-3125-01.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=REDACTED_AWS_ACCESS_KEY_ID%2F20241016%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20241016T172121Z&X-Amz-Expires=900
+components:
+  parameters:
+    SortByParameters:
+      in: query
+      name: sort_by
+      description: Sort values by a specific property. See available sort by values in the table.
+      schema:
+        type: string
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
+    LimitParameters:
+      in: query
+      name: limit
+      description: Number of results to return. Default 50, max 250.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  responses:
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+    204ConfirmDeletion:
+      description: Confirms resource deletion.
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+  schemas:
+    Fulfillment:
+      allOf:
+      - allOf:
+        - type: object
+          required:
+          - created_at
+          - updated_at
+          properties:
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+        - type: object
+          required:
+          - id
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            order_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            consumer_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            status_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            delivery_date:
+              type:
+              - string
+              - 'null'
+              format: date-time
+              example: '2018-03-20T09:12:28Z'
+            pickup_date:
+              type:
+              - string
+              - 'null'
+              format: date-time
+              example: '2018-03-20T09:12:28Z'
+            tracking_info:
+              type: object
+              properties:
+                shipping_carrier:
+                  type: string
+                  example: FedEx
+                shipping_method:
+                  type: string
+                  example: FE10
+                tracking_number:
+                  type: string
+                  example: Tracking123
+                tracking_url:
+                  type: string
+                  format: url
+                  example: https://www.fedex.com/fedextrack/no-results-found?trknbr=Tracking123
+            shipment_order_id:
+              type: string
+              example: '1234567890'
+            shipment_order_number:
+              type: string
+              example: SO-12345
+            label_url:
+              type:
+              - string
+              - 'null'
+              format: url
+              description: Pre-signed S3 URL for shipping label (expires in 15 minutes)
+              example: https://okc-labels-bucket.s3.us-west-2.amazonaws.com/...
+            shipper_okc_product_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            shipping_net_charge:
+              type: number
+              example: 12.5
+            shipping_charge_model:
+              type: string
+              example: FLAT_RATE
+            weight:
+              type: number
+              example: 2.5
+            external_fulfillment_id:
+              type:
+              - string
+              - 'null'
+              example: gid://shopify/Fulfillment/123456789
+            order_lines:
+              type: array
+              items:
+                type: object
+                required:
+                - id
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                  order_id:
+                    type: string
+                    format: uuid
+                    example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                  fulfillment_id:
+                    type: string
+                    format: uuid
+                    example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                  discount_amount:
+                    type: number
+                    example: 10.25
+                  name:
+                    type: string
+                    example: SOL-00020
+                  supplement_pack_name:
+                    type: string
+                    example: Daily Wellness Pack
+                  physician_name:
+                    type: string
+                    example: Dr. Nick
+                  custom_text_1:
+                    type: string
+                    example: Custom text field 1
+                  custom_text_2:
+                    type: string
+                    example: Custom text field 2
+                  custom_text_3:
+                    type: string
+                    example: Custom text field 3
+                  serving_size:
+                    type: integer
+                    example: 2
+                  duration:
+                    type: integer
+                    example: 30
+                  total:
+                    type: number
+                    example: 30.5
+                  unit_price:
+                    type: number
+                    example: 1.33
+                  client_custom_line_ids:
+                    type: string
+                    example: 73848374334,97384738,898993984738
+                  client_custom_order_line_id:
+                    type: string
+                    example: '123456'
+                  replacement_order_line_id:
+                    type: string
+                    readOnly: true
+                    format: uuid
+                    example: 0ea76271-0621-4230-8740-c40c10775646
+                  warnings:
+                    type: string
+                    readOnly: true
+                    example: Wrong shipping information
+                  lot_information:
+                    type: string
+                    example:
+                      information: Test information
+                  children_count:
+                    type: number
+                    example: 2
+                  children_tracking_numbers:
+                    type: string
+                    example: IA1456-8778-96,IA96854-66455-66
+                  crm_id:
+                    type: string
+                    x-internal: true
+                    description: Internal use only.
+                    example: ABCDE12587AHSNNHS
+                  source_line_item_ids:
+                    type: array
+                    items:
+                      oneOf:
+                      - type: string
+                      - type: number
+                    example:
+                    - 14299345846529
+                    - 6747788673281
+                    - 46695279853825
+                  is_priority_shipping:
+                    type: boolean
+                    example: true
+            crm_id:
+              type: string
+              x-internal: true
+              description: Internal use only.
+              example: ABCDE12587AHSNNHS
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+    Count:
+      allOf:
+      - type: object
+        properties:
+          count:
+            type: number
+            example: 8
+  examples:
+    FulfillmentFullSample:
+      summary: Create fulfillment with required fields.
+      value:
+        order_id: a079ccd0-e612-4a0c-9342-c169e18adb4f
+        consumer_id: 14ae0a8b-f2fa-436c-b652-69a88117df46
+        delivery_date: '2023-03-20T09:12:28Z'
+        pickup_date: '2023-03-20T09:12:28Z'
+        order_lines:
+        - id: d290f1ee-6c54-4b01-90e6-d701748f0851
+        tracking_info:
+          shipping_carrier: FedEx
+          shipping_method: FE10
+          tracking_number: Tracking123
+          tracking_url: https://www.fedex.com/fedextrack/no-results-found?trknbr=Tracking123
+        shipment_order_id: 1234567890
+        label_url: https://okc-labels-bucket.s3.us-west-2.amazonaws.com/fc69b371-0441-4e52-84ed-153c0205e48b/bb3ac65b-f307-47b8-820b-30bf1427b43d/OR-3125-01.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA&X-Amz-SignedHeaders=host&x-id=GetObject
+        crm_id: ABCDE12587AHSNNHS
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

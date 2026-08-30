@@ -1,0 +1,574 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 UPC Codes API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: UPC Codes
+paths:
+  /v2/upc-codes:
+    get:
+      tags:
+      - UPC Codes
+      security:
+      - bearerAuth:
+        - products/read
+      summary: List all UPC codes.
+      operationId: listUpcCodes
+      description: 'Returns all UPC code entries.
+
+
+        Filterable fields:
+
+        * upc
+
+        * brand
+
+        * country
+
+        * status
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/LimitParameters'
+      - $ref: '#/components/parameters/CursorParameters'
+      - $ref: '#/components/parameters/SortByParameters'
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  upc_codes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UpcCode'
+                  total:
+                    type: integer
+        default:
+          $ref: '#/components/responses/UnknownError'
+    post:
+      tags:
+      - UPC Codes
+      security:
+      - bearerAuth:
+        - products/write
+      summary: Create a UPC code.
+      operationId: createUpcCode
+      description: Creates a new UPC code entry. Internal use only.
+      x-internal: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - upc
+              description: Create a new UPC code entry (internal use only).
+              x-internal: true
+              properties:
+                upc:
+                  type: string
+                  example: 012345678905
+                  description: The UPC code value.
+                brand:
+                  type:
+                  - string
+                  - 'null'
+                  example: BrandName
+                country:
+                  type:
+                  - string
+                  - 'null'
+                  example: US
+                status:
+                  type:
+                  - string
+                  - 'null'
+                  example: Active
+                description:
+                  type:
+                  - string
+                  - 'null'
+                  example: Vitamin D3 Softgel 5000 IU
+      responses:
+        '201':
+          description: Returns the created UPC code.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  upc_code:
+                    $ref: '#/components/schemas/UpcCode'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/upc-codes/{id}:
+    get:
+      tags:
+      - UPC Codes
+      security:
+      - bearerAuth:
+        - products/read
+      summary: Retrieve a UPC code.
+      operationId: getUpcCode
+      description: Retrieves a single UPC code by ID.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '200':
+          description: Returns the UPC code object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  upc_code:
+                    $ref: '#/components/schemas/UpcCode'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    put:
+      tags:
+      - UPC Codes
+      security:
+      - bearerAuth:
+        - products/write
+      summary: Update a UPC code.
+      operationId: updateUpcCode
+      description: Updates a UPC code entry. Internal use only.
+      x-internal: true
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Update a UPC code entry (internal use only). All fields optional.
+              x-internal: true
+              properties:
+                upc:
+                  type: string
+                  example: 012345678905
+                  description: The UPC code value.
+                brand:
+                  type:
+                  - string
+                  - 'null'
+                  example: BrandName
+                country:
+                  type:
+                  - string
+                  - 'null'
+                  example: US
+                status:
+                  type:
+                  - string
+                  - 'null'
+                  example: Active
+                description:
+                  type:
+                  - string
+                  - 'null'
+                  example: Vitamin D3 Softgel 5000 IU
+      responses:
+        '200':
+          description: Returns the updated UPC code.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  upc_code:
+                    $ref: '#/components/schemas/UpcCode'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    delete:
+      tags:
+      - UPC Codes
+      security:
+      - bearerAuth:
+        - products/write
+      summary: Delete a UPC code.
+      operationId: deleteUpcCode
+      description: Deletes a UPC code and detaches it from any linked OKC products.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '204':
+          description: Confirms deletion of the UPC code.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+  /v2/upc-codes/{id}/okc-products/{okcProductId}:
+    post:
+      tags:
+      - UPC Codes
+      security:
+      - bearerAuth:
+        - products/write
+      summary: Attach an OKC product to a UPC code.
+      operationId: attachOkcProductToUpcCode
+      description: Links an OKC product to a UPC code entry. Internal use only.
+      x-internal: true
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the UPC code.
+      - name: okcProductId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the OKC product to attach.
+      responses:
+        '200':
+          description: Returns the updated UPC code with the attached OKC product.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  upc_code:
+                    $ref: '#/components/schemas/UpcCode'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    delete:
+      tags:
+      - UPC Codes
+      security:
+      - bearerAuth:
+        - products/write
+      summary: Detach an OKC product from a UPC code.
+      operationId: detachOkcProductFromUpcCode
+      description: Removes the link between an OKC product and a UPC code.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the UPC code.
+      - name: okcProductId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the OKC product to detach.
+      responses:
+        '204':
+          description: Confirms the OKC product has been detached.
+        default:
+          $ref: '#/components/responses/UnknownError'
+components:
+  parameters:
+    SortByParameters:
+      in: query
+      name: sort_by
+      description: Sort values by a specific property. See available sort by values in the table.
+      schema:
+        type: string
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
+    LimitParameters:
+      in: query
+      name: limit
+      description: Number of results to return. Default 50, max 250.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  responses:
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+  schemas:
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+    UpcCode:
+      allOf:
+      - allOf:
+        - type: object
+          required:
+          - created_at
+          - updated_at
+          properties:
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+        - type: object
+          required:
+          - id
+          - upc
+          properties:
+            id:
+              type: string
+              format: uuid
+              readOnly: true
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            upc:
+              type: string
+              example: 012345678905
+              description: The UPC code value.
+            brand:
+              type:
+              - string
+              - 'null'
+              example: BrandName
+            country:
+              type:
+              - string
+              - 'null'
+              example: US
+            status:
+              type:
+              - string
+              - 'null'
+              example: Active
+            description:
+              type:
+              - string
+              - 'null'
+              example: Vitamin D3 Softgel 5000 IU
+            created_by:
+              type: string
+              format: uuid
+              readOnly: true
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            updated_by:
+              type: string
+              format: uuid
+              readOnly: true
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,0 +1,428 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Order Lines API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Order Lines
+  description: Routes to manage order lines
+paths:
+  /v2/order-lines/{id}:
+    get:
+      tags:
+      - Order Lines
+      security:
+      - bearerAuth:
+        - order-lines/read
+      summary: Retrieve an order line
+      operationId: getOrderLine
+      description: Retrieve an order line.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns the Order Line object for a valid identifier.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order_line:
+                    $ref: '#/components/schemas/OrderLine'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+components:
+  schemas:
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+    OrderLine:
+      allOf:
+      - type: object
+        required:
+        - id
+        properties:
+          id:
+            type: string
+            format: uuid
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+          pouching_summary:
+            type: array
+            items:
+              required:
+              - toa
+              - pouch_count
+              properties:
+                toa:
+                  type: string
+                  example: Morning
+                pouch_count:
+                  type: number
+                  example: 30
+          order_id:
+            type: string
+            format: uuid
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+          batch_id:
+            type: string
+            format: uuid
+            example: 757ab8ec-dd53-4ee3-8935-c1e3d631bc75
+          fulfillment_id:
+            type: string
+            format: uuid
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            x-internal: true
+            description: This field is for internal use only.
+          packaging_asset_group_id:
+            type: string
+            format: uuid
+            example: dda81678-c6f6-41b3-a30b-6b12e9351c9b
+          product_line_id:
+            type: string
+            format: uuid
+            example: a079ccd0-e612-4a0c-9342-c169e18adb4f
+          kit_id:
+            type: string
+            example: ABC-01234-56789
+          client_custom_pack_name:
+            type: string
+            example: Sleep Pack
+          discount_amount:
+            type: number
+            example: 10.25
+            x-internal: true
+            description: This field is for internal use only.
+          name:
+            type: string
+            example: SOL-00020
+            x-internal: true
+            description: This field is for internal use only.
+          physician_name:
+            type: string
+            example: Dr. Nick
+          duration:
+            type: integer
+            example: 30
+          total:
+            type: number
+            example: 30.5
+          unit_price:
+            type: number
+            example: 1.33
+          client_custom_line_ids:
+            type: string
+            example: 73848374334,97384738,898993984738
+          client_custom_order_line_id:
+            type: string
+            example: '123456'
+          replacement_order_line_id:
+            type: string
+            readOnly: true
+            format: uuid
+            example: 0ea76271-0621-4230-8740-c40c10775646
+          warnings:
+            type: string
+            readOnly: true
+            example: Wrong shipping information
+          lot_information:
+            type: string
+            example:
+              information: Test information
+          children_count:
+            type: number
+            example: 2
+          children_tracking_numbers:
+            type: string
+            example: IA1456-8778-96,IA96854-66455-66
+          crm_id:
+            type: string
+            example: ABCDE12587AHSNNHS
+            x-internal: true
+            description: This field is for internal use only.
+          pouches:
+            type: array
+            items:
+              type: object
+              required:
+              - id
+              - order_line_id
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                order_line_id:
+                  type: string
+                  format: uuid
+                  example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                time_of_administration:
+                  type: string
+                  enum:
+                  - Morning
+                  - Midday
+                  - Evening
+                  example: Morning
+                custom_label:
+                  type: string
+                  example: Bart's Vitamins
+                pack_id:
+                  type: string
+                  format: uuid
+                  example: 3025a5ef-5a8f-4120-b872-4c8bbe33b643
+                  description: Either "pack_id" or "contents" is required.
+                cycle:
+                  type: string
+                  example: '"daily" or a list of semi-colon delimited positive integers less than or equal to the `cycle_length`: "1;3;5;7;9"'
+                cycle_length:
+                  type: integer
+                  enum:
+                  - 7
+                  - 10
+                  example: 7
+                duration:
+                  type: integer
+                  example: 30
+                crm_id:
+                  type: string
+                  x-internal: true
+                  description: Internal use only.
+                  example: ABCDE12587AHSNNHS
+                set_id:
+                  type:
+                  - string
+                  - 'null'
+                  format: uuid
+                  example: 3025a5ef-5a8f-4120-b872-4c8bbe33b643
+                  description: Client product ID of the SET product this pouch originated from. Present before set explosion; null after processing.
+                  x-internal: true
+                contents:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - id
+                    - pouch_id
+                    - client_product_id
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                      pouch_id:
+                        type: string
+                        format: uuid
+                        example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                      client_product_id:
+                        type: string
+                        format: uuid
+                        example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                      serving_size:
+                        type: integer
+                        example: 2
+                      crm_id:
+                        type: string
+                        x-internal: true
+                        description: Internal use only.
+                        example: ABCDE12587AHSNNHS
+                  description: Either "pack_id" or "contents" is required.
+          is_expedited:
+            type: boolean
+            example: true
+          is_priority_shipping:
+            type: boolean
+            example: true
+          is_priority_production:
+            type: boolean
+            example: false
+          has_special_handling:
+            type: boolean
+            example: true
+          special_handling_instructions:
+            type: string
+            example: Special handling instructions
+          share_url:
+            type: string
+            readOnly: true
+            example: https://share.example.com/order/abc123
+          custom_text_1:
+            type: string
+            example: Custom text field 1
+          custom_text_2:
+            type: string
+            example: Custom text field 2
+          custom_text_3:
+            type: string
+            example: Custom text field 3
+          source_line_item_ids:
+            type: array
+            items:
+              oneOf:
+              - type: string
+              - type: number
+            example:
+            - 14299345846529
+            - 6747788673281
+            - 46695279853825
+          is_static_item:
+            type: boolean
+            example: true
+            description: Indicates this order line was submitted as a static (non-normalized) item, typically from an integration such as Shopify.
+          contains_standalone:
+            type: boolean
+            example: false
+            description: Indicates this order line contains a standalone product.
+          set_id:
+            type:
+            - string
+            - 'null'
+            format: uuid
+            example: 3025a5ef-5a8f-4120-b872-4c8bbe33b643
+            description: Client product ID of the SET product this order line was generated from during set explosion.
+            x-internal: true
+          status:
+            type:
+            - string
+            - 'null'
+            example: Pending
+            description: Order line status.
+          order_acceptance_date:
+            type: string
+            format: date
+            example: '2026-04-02'
+            x-internal: true
+            description: This field is for internal use only.
+  parameters:
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

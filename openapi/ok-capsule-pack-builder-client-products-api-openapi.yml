@@ -1,0 +1,448 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Pack Builder Client Products API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Pack Builder Client Products
+paths:
+  /v2/pack-builders/{id}/bulk-add-products:
+    post:
+      tags:
+      - Pack Builder Client Products
+      security:
+      - bearerAuth: []
+      summary: Add multiple client products to pack builder
+      operationId: createMultiplePackBuilderProduct
+      description: Add multiple Client Products to Pack Builder.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - client_product_ids
+              description: Add multiple products to a pack builder in bulk
+              properties:
+                client_product_ids:
+                  type: array
+                  description: Array of client product IDs to add
+                  items:
+                    type: string
+                    format: uuid
+                  example:
+                  - 3ab920e6-9d59-4f33-aea0-5045f726dafb
+                  - e640d058-ecda-4f48-ba2f-c0a59804f36f
+                  - a1b2c3d4-e5f6-7890-abcd-ef1234567890
+              example:
+                client_product_ids:
+                - 3ab920e6-9d59-4f33-aea0-5045f726dafb
+                - e640d058-ecda-4f48-ba2f-c0a59804f36f
+              x-examples:
+                single-product:
+                  summary: Add single product
+                  value:
+                    client_product_ids:
+                    - 3ab920e6-9d59-4f33-aea0-5045f726dafb
+                multiple-products:
+                  summary: Add multiple products
+                  value:
+                    client_product_ids:
+                    - 3ab920e6-9d59-4f33-aea0-5045f726dafb
+                    - e640d058-ecda-4f48-ba2f-c0a59804f36f
+                    - a1b2c3d4-e5f6-7890-abcd-ef1234567890
+            examples:
+              PackBuilderMultipleAddProductsSample:
+                $ref: '#/components/examples/PackBuilderMultipleAddProductsSample'
+              PackBuilderMultipleAddSingleProductSample:
+                $ref: '#/components/examples/PackBuilderMultipleAddSingleProductSample'
+      responses:
+        '201':
+          description: Returns an added SyncProcess object.
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/SyncProcessResponse'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/pack-builders/{id}/products:
+    post:
+      tags:
+      - Pack Builder Client Products
+      security:
+      - bearerAuth: []
+      summary: Add a client product to pack builder
+      operationId: createPackBuilderProduct
+      description: Add a Client Product to Pack Builder.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - client_product_id
+              description: Add a single product to a pack builder
+              properties:
+                client_product_id:
+                  type: string
+                  format: uuid
+                  description: ID of the client product to add
+                  example: 3ab920e6-9d59-4f33-aea0-5045f726dafb
+              example:
+                client_product_id: 3ab920e6-9d59-4f33-aea0-5045f726dafb
+            examples:
+              PackBuilderProductSample:
+                $ref: '#/components/examples/PackBuilderProductSample'
+      responses:
+        '201':
+          description: Returns an added PackBuilderProduct object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pack_builder_product:
+                    $ref: '#/components/schemas/PackBuilderProduct'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    get:
+      tags:
+      - Pack Builder Client Products
+      security:
+      - bearerAuth: []
+      summary: Retrieves a pack builders client products
+      operationId: listPackBuildersProducts
+      description: 'Retrieves a pack builder client products.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - pack_builder_products
+                properties:
+                  pack_builder_products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PackBuilderProduct'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/pack-builders/{id}/products/{productId}:
+    delete:
+      tags:
+      - Pack Builder Client Products
+      security:
+      - bearerAuth: []
+      summary: Delete a pack builder client product
+      operationId: deletePackBuilderProduct
+      description: Delete a client product from a pack builder.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: path
+        name: productId
+        required: true
+        schema:
+          type: string
+          minimum: 1
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      responses:
+        '204':
+          $ref: '#/components/responses/204ConfirmDeletion'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+components:
+  responses:
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+    204ConfirmDeletion:
+      description: Confirms resource deletion.
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+  schemas:
+    SyncProcessResponse:
+      allOf:
+      - type: object
+        properties:
+          sync_process_id:
+            type: string
+            format: uuid
+            example: a390f1ab-6c54-4b01-90e6-d701748f1837
+    PackBuilderProduct:
+      allOf:
+      - type: object
+        required:
+        - pack_builder_id
+        - client_product_id
+        - client_product
+        properties:
+          pack_builder_id:
+            type: string
+            format: uuid
+            example: a0d671e2-591a-42ce-b336-df256262b0d2
+          client_product_id:
+            type: string
+            format: uuid
+            example: 3ab920e6-9d59-4f33-aea0-5045f726dafb
+          client_product:
+            type: object
+            required:
+            - id
+            - product_line_id
+            - name
+            - product_name
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: 3ab920e6-9d59-4f33-aea0-5045f726dafb
+              product_line_id:
+                type: string
+                format: uuid
+                example: 3ab920e6-9d59-4f33-aea0-5045f726dafb
+              name:
+                type: string
+                example: SP-0084
+              product_name:
+                type: string
+                example: Vegan Women's pack (energy+joint)
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+  examples:
+    PackBuilderProductSample:
+      summary: Create pack builder client product.
+      value:
+        client_product_id: 6d28a691-1d4c-48fb-8c18-23e3557b1e05
+    PackBuilderMultipleAddSingleProductSample:
+      summary: Add single client product.
+      value:
+        client_product_ids:
+        - d290f1ee-6c54-4b01-90e6-d701748f0851
+    PackBuilderMultipleAddProductsSample:
+      summary: Add multiple client products.
+      value:
+        client_product_ids:
+        - d290f1ee-6c54-4b01-90e6-d701748f0851
+        - e640d058-ecda-4f48-ba2f-c0a59804f36f
+        - a390f1ab-6c54-4b01-90e6-d701748f1837
+  parameters:
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

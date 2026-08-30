@@ -1,0 +1,544 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Authentication API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Authentication
+  description: 'OK Capsule API uses **Oauth2.0 with OpenID Connect**. It issues **access**, **id**, and **refresh** tokens. **Access** tokens is used to authenticate API requests and are short lived (1 day). *Id token** can be used by a client application to display user''s information. It is also short lived (1 day).  **Refresh** token is long lived (10 years) and is used to renew **access** and **id** tokens. Authentication to the API is performed via Bearer auth Authorization header: *Authorization: Bearer <access_token>*.'
+paths:
+  /v2/authentication/token:
+    post:
+      tags:
+      - Authentication
+      security:
+      - bearerAuth: []
+      summary: Request access, id, and refresh tokens
+      description: Use username and password to retrieve **access token**, **id token**, and **refresh token**. The access token will include permissions based on the user's assigned role.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password
+              required:
+              - username
+              - password
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - access_token
+                - id_token
+                - refresh_token
+                - token_type
+                - expires_in
+                - permissions
+                properties:
+                  access_token:
+                    type: string
+                    example: eyJra1example
+                  id_token:
+                    type: string
+                    example: eyJra1example
+                  refresh_token:
+                    type: string
+                    example: eyJra1example
+                  token_type:
+                    type: string
+                    example: Bearer
+                  expires_in:
+                    type: string
+                    example: 86400
+                  permissions:
+                    type: string
+                    example: orders/read,orders/create,orders/update,orders/delete,products/read,products/create
+        '422':
+          description: Validation error response.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - error
+                properties:
+                  error:
+                    type: object
+                    required:
+                    - message
+                    - errors
+                    properties:
+                      message:
+                        type: string
+                        example: Validation error
+                      errors:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            message:
+                              type: string
+                              example: '''username'' is required'
+                            type:
+                              type: string
+                              example: any.required
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+  /v2/authentication/refresh-token:
+    post:
+      tags:
+      - Authentication
+      security:
+      - bearerAuth: []
+      summary: Get new access and id tokens
+      description: Use refresh token to retrieve access and id tokens
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  example: eyJra1example
+              required:
+              - refresh_token
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - access_token
+                - id_token
+                - refresh_token
+                - token_type
+                - expires_in
+                properties:
+                  access_token:
+                    type: string
+                    example: eyJra1example
+                  id_token:
+                    type: string
+                    example: eyJra1example
+                  token_type:
+                    type: string
+                    example: Bearer
+                  expires_in:
+                    type: string
+                    example: 86400
+        '422':
+          $ref: '#/components/responses/422AuthValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/authentication/forgot-password:
+    post:
+      tags:
+      - Authentication
+      security:
+      - bearerAuth: []
+      summary: Trigger reset password email or text message
+      description: Trigger reset password email or text message to receive confirmation code
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+              required:
+              - email
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - message
+                properties:
+                  message:
+                    type: string
+                    example: Confirmation code has been sent to email/phone number ...
+        '422':
+          $ref: '#/components/responses/422AuthValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/authentication/reset-password:
+    post:
+      tags:
+      - Authentication
+      security:
+      - bearerAuth: []
+      summary: Reset password
+      description: Use confirmation code to reset password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                confirmation_code:
+                  type: string
+              required:
+              - username
+              - password
+              - confirmation_code
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - message
+                properties:
+                  message:
+                    type: string
+                    example: Password has been reset
+        '422':
+          $ref: '#/components/responses/422AuthValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/authentication/user:
+    get:
+      tags:
+      - Authentication
+      security:
+      - bearerAuth: []
+      summary: User information
+      description: Get information about the user who issued token
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+components:
+  responses:
+    UnauthorizedError:
+      description: Authentication information is missing or invalid
+      content:
+        application/json:
+          schema:
+            properties:
+              error:
+                properties:
+                  message:
+                    type: string
+                    example: Unauthorized
+                required:
+                - message
+                type: object
+            required:
+            - error
+            type: object
+    422AuthValidationError:
+      description: Validation error response from authentication endpoints (gateway service)
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                required:
+                - message
+                - errors
+                properties:
+                  message:
+                    type: string
+                    example: Validation error
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - message
+                      - type
+                      properties:
+                        message:
+                          type: string
+                          example: '''username'' is required'
+                        type:
+                          type: string
+                          example: any.required
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+  schemas:
+    User:
+      allOf:
+      - type: object
+        required:
+        - id
+        - client_id
+        properties:
+          id:
+            type: string
+            format: uuid
+            readOnly: true
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+          client_id:
+            type:
+            - string
+            - 'null'
+            format: uuid
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+          user_type:
+            type: string
+            enum:
+            - client
+            - internal
+            example: client
+          name:
+            type: string
+            example: John Doe
+          username:
+            type: string
+            format: uuid
+            readOnly: true
+            example: 087078ea-4b50-4a46-bb4d-322cf17db3ca
+            description: Same as id (Cognito sub)
+          email:
+            type: string
+            format: email
+            example: user@example.com
+          locale:
+            type:
+            - string
+            - 'null'
+            example: en-US
+          roles:
+            type: array
+            items:
+              type: string
+              enum:
+              - Client_Admin
+              - Client_Manager
+              - Client_Developer
+              - Client_User
+              - Internal_Admin
+              - Internal_Manager
+              - Internal_Developer
+              - Internal_User
+            example:
+            - Client_Manager
+            - Client_Developer
+          phone_number:
+            type:
+            - string
+            - 'null'
+            format: E.164
+            example: 12133734253
+          last_login:
+            type:
+            - string
+            - 'null'
+            format: date-time
+            readOnly: true
+            example: '2023-06-29T11:12:28Z'
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

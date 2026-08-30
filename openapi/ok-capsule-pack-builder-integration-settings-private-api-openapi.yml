@@ -1,0 +1,529 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Pack Builder Integration Settings (Private) API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Pack Builder Integration Settings (Private)
+paths:
+  /v2/pack-builders/integration-settings:
+    post:
+      tags:
+      - Pack Builder Integration Settings (Private)
+      summary: Creates a integration settings.
+      operationId: createPackBuilderIntegrationSettings
+      description: Creates a integration settings.
+      security:
+      - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - pack_builder_id
+              - installation_settings
+              description: Create integration settings for a pack builder (e.g., Shopify app settings)
+              properties:
+                pack_builder_id:
+                  type: string
+                  format: uuid
+                  description: Pack builder to configure
+                  example: 3ab920e6-9d59-4f33-aea0-5045f726dafb
+                installation_settings:
+                  type: object
+                  description: Integration-specific settings (structure varies by integration type)
+                  example:
+                    shop_domain: mystore.myshopify.com
+                    access_token: shpat_xxxxx
+                    webhook_version: 2024-01
+              example:
+                pack_builder_id: 3ab920e6-9d59-4f33-aea0-5045f726dafb
+                installation_settings:
+                  shop_domain: mystore.myshopify.com
+              x-examples:
+                shopify:
+                  summary: Shopify integration settings
+                  value:
+                    pack_builder_id: 3ab920e6-9d59-4f33-aea0-5045f726dafb
+                    installation_settings:
+                      shop_domain: mystore.myshopify.com
+                      access_token: shpat_xxxxx
+                      webhook_version: 2024-01
+        description: Pack Builder Integration Settings to create
+      responses:
+        '201':
+          description: Returns created Pack Builder Integration Settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - integration_setting
+                properties:
+                  integration_setting:
+                    $ref: '#/components/schemas/PackBuilderIntegrationSettings'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    get:
+      tags:
+      - Pack Builder Integration Settings (Private)
+      security:
+      - bearerAuth: []
+      summary: List all pack builder integration settings
+      operationId: listPackBuilderIntegrationSettings
+      description: 'List all pack builder integration settings.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/LimitParameters'
+      - $ref: '#/components/parameters/CursorParameters'
+      - $ref: '#/components/parameters/SortByParameters'
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - integration_settings
+                properties:
+                  integration_settings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PackBuilderIntegrationSettings'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/pack-builders/integration-settings/count:
+    get:
+      tags:
+      - Pack Builder Integration Settings (Private)
+      security:
+      - bearerAuth:
+        - addresses/read
+      summary: Count of all integration settings
+      operationId: getIntegrationSettingsTotalCount
+      description: 'Count of all integration settings
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Count'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/pack-builders/integration-settings/{id}:
+    get:
+      tags:
+      - Pack Builder Integration Settings (Private)
+      security:
+      - bearerAuth: []
+      summary: Retrieves a pack builder integration settings
+      operationId: getPackBuilderIntegrationSettings
+      description: Retrieves a pack builder integration settings
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '200':
+          description: Returns the updated PackBuilderIntegrationSettings object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  integration_setting:
+                    $ref: '#/components/schemas/PackBuilderIntegrationSettings'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    put:
+      tags:
+      - Pack Builder Integration Settings (Private)
+      security:
+      - bearerAuth: []
+      summary: Update a pack builder integration settings
+      operationId: updatePackBuilderIntegrationSettings
+      description: Update a pack builder integration settings.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - installation_settings
+              description: Update integration settings for a pack builder
+              properties:
+                installation_settings:
+                  type: object
+                  description: Integration-specific settings (structure varies by integration type)
+                  example:
+                    webhook_version: 2024-04
+              example:
+                installation_settings:
+                  webhook_version: 2024-04
+              x-examples:
+                update-settings:
+                  summary: Update integration settings
+                  value:
+                    installation_settings:
+                      webhook_version: 2024-04
+                      enable_notifications: true
+      responses:
+        '200':
+          description: Returns the updated BuilderIntegrationSettings object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  integration_setting:
+                    $ref: '#/components/schemas/PackBuilderIntegrationSettings'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    delete:
+      tags:
+      - Pack Builder Integration Settings (Private)
+      security:
+      - bearerAuth: []
+      summary: Delete a pack builder integration settings
+      operationId: deletePackBuilderIntegrationSettings
+      description: Delete a pack builder integration settings
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      responses:
+        '204':
+          $ref: '#/components/responses/204ConfirmDeletion'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+components:
+  parameters:
+    SortByParameters:
+      in: query
+      name: sort_by
+      description: Sort values by a specific property. See available sort by values in the table.
+      schema:
+        type: string
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
+    LimitParameters:
+      in: query
+      name: limit
+      description: Number of results to return. Default 50, max 250.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  responses:
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+    204ConfirmDeletion:
+      description: Confirms resource deletion.
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+  schemas:
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+    Count:
+      allOf:
+      - type: object
+        properties:
+          count:
+            type: number
+            example: 8
+    PackBuilderIntegrationSettings:
+      allOf:
+      - type: object
+        required:
+        - id
+        - pack_builder_id
+        - installation_settings
+        properties:
+          id:
+            type: string
+            format: uuid
+            example: a0d671e2-591a-42ce-b336-df256262b0d2
+          pack_builder_id:
+            type: string
+            format: uuid
+            example: 3ab920e6-9d59-4f33-aea0-5045f726dafb
+          installation_settings:
+            type: object
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

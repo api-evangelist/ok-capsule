@@ -1,0 +1,548 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Telemetry API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Telemetry
+paths:
+  /v2/telemetry:
+    post:
+      tags:
+      - Telemetry
+      summary: Creates a telemetry record.
+      operationId: createTelemetry
+      description: Creates a telemetry record.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Create a telemetry event (internal use)
+              x-internal: true
+              properties:
+                name:
+                  type: string
+                  description: Telemetry event name
+                  example: widget_loaded
+              example:
+                name: widget_loaded
+      responses:
+        '201':
+          description: Returns a new Telemetry object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  telemetry:
+                    $ref: '#/components/schemas/Telemetry'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    get:
+      tags:
+      - Telemetry
+      security:
+      - bearerAuth: []
+      summary: List all Telemetries.
+      operationId: listCollectTelemetry
+      description: 'List all Telemetries.
+
+
+        Filterable fields:
+
+        * ALL
+
+
+        Sortable fields:
+
+        * created_at
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/LimitParameters'
+      - $ref: '#/components/parameters/CursorParameters'
+      - $ref: '#/components/parameters/SortByParameters'
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - telemetries
+                properties:
+                  telemetries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TelemetryCollectModel'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/telemetry/collect:
+    post:
+      tags:
+      - Telemetry
+      summary: Collect Telemetry Data
+      operationId: collectTelemetry
+      description: Collect Telemetry Data
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Collect analytics/telemetry data from pack builder widget (public endpoint)
+              properties:
+                session_id:
+                  oneOf:
+                  - type: string
+                  - type: number
+                  description: Session identifier
+                  example: 1698878195645
+                pack_builder_name:
+                  type: string
+                  description: Pack builder store name
+                  example: wellness-store.myshopify.com
+                action:
+                  type: string
+                  description: User action being tracked
+                  example: ADD_TO_CART
+                application:
+                  type: string
+                  description: Application source
+                  example: pack_builder_widget
+                domain:
+                  type: string
+                  description: Website domain
+                  example: mystore.com
+                page:
+                  type: string
+                  description: Page path
+                  example: /a/pack-builder
+                page_url:
+                  type: string
+                  format: uri
+                  description: Full page URL
+                  example: https://mystore.com/a/pack-builder
+                referrer:
+                  type: string
+                  description: Referrer URL
+                  example: https://www.google.com
+                is_landing_page:
+                  type: boolean
+                  description: Whether this is the landing page
+                  example: true
+                utm:
+                  type: object
+                  description: UTM tracking parameters
+                  properties:
+                    source:
+                      type: string
+                      example: google
+                    medium:
+                      type: string
+                      example: cpc
+                    campaign:
+                      type: string
+                      example: summer_sale
+                    term:
+                      type: string
+                      example: vitamins
+                    content:
+                      type: string
+                      example: banner_1
+              example:
+                session_id: 1698878195645
+                pack_builder_name: wellness-store.myshopify.com
+                action: VIEW_PRODUCT
+                application: pack_builder_widget
+                domain: mystore.com
+                page: /a/pack-builder
+              x-examples:
+                page-view:
+                  summary: Track page view
+                  value:
+                    session_id: 1698878195645
+                    pack_builder_name: wellness-store.myshopify.com
+                    action: PAGE_VIEW
+                    application: pack_builder_widget
+                    domain: mystore.com
+                    page: /a/pack-builder
+                    page_url: https://mystore.com/a/pack-builder
+                    is_landing_page: true
+                add-to-cart:
+                  summary: Track add to cart
+                  value:
+                    session_id: 1698878195645
+                    pack_builder_name: wellness-store.myshopify.com
+                    action: ADD_TO_CART
+                    application: pack_builder_widget
+                    domain: mystore.com
+                    page: /a/pack-builder
+                with-utm:
+                  summary: Track with UTM parameters
+                  value:
+                    session_id: 1698878195645
+                    pack_builder_name: wellness-store.myshopify.com
+                    action: PAGE_VIEW
+                    application: pack_builder_widget
+                    domain: mystore.com
+                    page: /a/pack-builder
+                    referrer: https://www.google.com
+                    utm:
+                      source: google
+                      medium: cpc
+                      campaign: summer_sale
+      responses:
+        '201':
+          description: Returns a new Telemetry object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  telemetry:
+                    $ref: '#/components/schemas/TelemetryCollect'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+components:
+  schemas:
+    TelemetryCollectModel:
+      allOf:
+      - type: object
+        required:
+        - id
+        properties:
+          id:
+            type: string
+            format: uuid
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+          client_id:
+            type: string
+            format: uuid
+            example: 29f24a23-68dd-41bb-9aba-f958c10c7d39
+          session_id:
+            type: string
+            example: 1698878195645
+          pack_builder_id:
+            type: string
+            format: uuid
+            example: 2bc7d616-f43e-4532-ba3a-522ecbb7bce5
+          ip_address:
+            type: string
+            example: 172.24.0.2
+          action:
+            type: string
+            example: ADD_TO_CART
+          application:
+            type: string
+            example: pack_builder_widget
+          referrer:
+            type: string
+            example: http://m.facebook.com
+          domain:
+            type: string
+            example: mystore.com
+          page:
+            type: string
+            example: /a/pack-builder
+          page_url:
+            type: string
+            example: https://mystore.com/a/pack-builder
+          is_landing_page:
+            type: boolean
+            example: false
+          utm_source:
+            type: string
+            example: source
+          utm_medium:
+            type: string
+            example: medium
+          utm_campaign:
+            type: string
+            example: campaign
+          utm_term:
+            type: string
+            example: term
+          utm_content:
+            type: string
+            example: content
+          ua:
+            type: string
+            example: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36
+          ua_browser_name:
+            type: string
+            example: Chrome
+          ua_browser_version:
+            type: string
+            example: 119.0.0.0
+          ua_browser_major:
+            type: string
+            example: 119
+          ua_engine_name:
+            type: string
+            example: Blink
+          ua_engine_version:
+            type: string
+            example: 119.0.0.0
+          ua_os_name:
+            type: string
+            example: Windows
+          ua_os_version:
+            type: string
+            example: 10
+          ua_device_model:
+            type: string
+            example: XLR-1452
+          ua_device_type:
+            type: string
+            example: PC
+          ua_device_vendor:
+            type: string
+            example: Intel
+          ua_cpu_architecture:
+            type: string
+            example: amd64
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+    Telemetry:
+      allOf:
+      - type: object
+        required:
+        - status
+        properties:
+          status:
+            type: string
+            example: OK
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+    TelemetryCollect:
+      allOf:
+      - type: object
+        required:
+        - id
+        properties:
+          id:
+            type: string
+            format: uuid
+            readOnly: true
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+  parameters:
+    SortByParameters:
+      in: query
+      name: sort_by
+      description: Sort values by a specific property. See available sort by values in the table.
+      schema:
+        type: string
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
+    LimitParameters:
+      in: query
+      name: limit
+      description: Number of results to return. Default 50, max 250.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
+  responses:
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

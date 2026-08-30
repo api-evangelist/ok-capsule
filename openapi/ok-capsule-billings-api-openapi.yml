@@ -1,0 +1,685 @@
+openapi: 3.2.0
+info:
+  description: '## Overview
+
+
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
+
+
+    **All requests must be made over HTTPS.**
+
+
+    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
+
+
+    ## Getting Started
+
+
+    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
+
+
+    1. **Set up your account** - Your OK Capsule account must be created and active
+
+    2. **Set up your brand** - At least one Product Line must be configured in your account
+
+    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
+
+    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
+
+    5. **List products** - GET `/v2/products` to see available supplements
+
+    6. **Create an order** - POST to `/v2/orders` with consumer and product details
+
+    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
+
+
+    ## Environments
+
+
+    | Environment | Purpose | Notes |
+
+    |-------------|---------|-------|
+
+    | **Production** | Live orders | Real fulfillment and shipping |
+
+    | **Stage** | Testing | Test data only, no real shipments |
+
+
+    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
+
+
+    ## Core Concepts
+
+
+    | Term | Route | Description |
+
+    |------|-------|-------------|
+
+    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
+
+    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
+
+    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
+
+    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
+
+    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
+
+    | **Pouch** | — | An individual daily packet of supplements |
+
+    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
+
+    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
+
+    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
+
+    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
+
+    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
+
+    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+  version: 2.0.0
+  title: OKC core API V2 Billings API
+  contact:
+    name: Engineering Department, OKCapsule
+    email: lukas@okcapsule.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- description: Production environment
+  url: https://na1-prod.okcapsule.app
+- description: Stage/Testing environment
+  url: https://na1-stage.okcapsule.app
+tags:
+- name: Billings
+  description: Routes to manage billing
+paths:
+  /v2/billings:
+    post:
+      tags:
+      - Billings
+      summary: Creates a billing record.
+      operationId: createBilling
+      description: Creates a billing record. Only internal users can Creates a billing record. Must pass client id in query parameter.
+      parameters:
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+          example: client_id:14ae0a8b-f2fa-436c-b652-69a88117df46
+        required: true
+      security:
+      - bearerAuth:
+        - billings/write
+      responses:
+        '201':
+          description: Returns a created Billing object.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - billing
+                properties:
+                  billing:
+                    $ref: '#/components/schemas/Billing'
+        '422':
+          $ref: '#/components/responses/422ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - bill_applied_deposit_amount
+              - total_shipping_fee
+              - total_fulfillment_fee
+              - total_supplement_fee
+              - bill_balance
+              - bill_total
+              - bill_date
+              - bill_number
+              - invoice_url
+              properties:
+                bill_applied_deposit_amount:
+                  type: number
+                  example: 12.34
+                total_shipping_fee:
+                  type: number
+                  example: 23.32
+                total_fulfillment_fee:
+                  type: number
+                  example: 10
+                total_supplement_fee:
+                  type: number
+                  example: 15.3
+                bill_balance:
+                  type: number
+                  example: 22.1
+                bill_total:
+                  type: number
+                  example: 12.14
+                bill_status:
+                  type: string
+                  default: Submitted
+                  description: Defaults to "Submitted" if not provided
+                  example: Submitted
+                bill_date:
+                  type: string
+                  format: date
+                  description: ISO date format (YYYY-MM-DD)
+                  example: '2023-03-20'
+                bill_number:
+                  type: string
+                  minLength: 8
+                  maxLength: 15
+                  pattern: \d{8,15}
+                  description: Bill number must be 8-15 digits, e.g. '00000125'
+                  example: '00000125'
+                invoice_url:
+                  type: string
+                  example: https://cdn-url.com/invoice.pdf
+            examples:
+              BillingFullExample:
+                $ref: '#/components/examples/BillingFullSample'
+        description: Billing to create
+    get:
+      tags:
+      - Billings
+      security:
+      - bearerAuth:
+        - billings/read
+      summary: List all billings.
+      operationId: listBillings
+      description: 'List all billings.
+
+
+        Filterable fields:
+
+        * bill_date
+
+        * bill_number
+
+        * bill_status
+
+        * crm_id
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/LimitParameters'
+      - $ref: '#/components/parameters/CursorParameters'
+      - $ref: '#/components/parameters/SortByParameters'
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - billings
+                properties:
+                  billings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Billing'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/billings/count:
+    get:
+      tags:
+      - Billings
+      security:
+      - bearerAuth:
+        - billings/read
+      summary: Count of all billings
+      operationId: getBillingTotalCount
+      description: 'Count of all billings.
+
+
+        Filterable fields:
+
+        * bill_date
+
+        * bill_number
+
+        * bill_status
+
+        * crm_id
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/QueryParameters'
+      responses:
+        '200':
+          description: Search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/Count'
+        default:
+          $ref: '#/components/responses/UnknownError'
+  /v2/billings/{id}:
+    get:
+      tags:
+      - Billings
+      security:
+      - bearerAuth:
+        - billings/read
+      summary: Retrieve a billing.
+      operationId: getBilling
+      description: Retrieve a billing.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns the Billing object for a valid identifier.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  billing:
+                    $ref: '#/components/schemas/Billing'
+    put:
+      tags:
+      - Billings
+      security:
+      - bearerAuth:
+        - billings/write
+      summary: Update a billing
+      operationId: updateBilling
+      description: Update Billing object
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+          example: client_id:14ae0a8b-f2fa-436c-b652-69a88117df46
+        required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bill_applied_deposit_amount:
+                  type: number
+                  example: 12.34
+                total_shipping_fee:
+                  type: number
+                  example: 23.32
+                total_fulfillment_fee:
+                  type: number
+                  example: 10
+                total_supplement_fee:
+                  type: number
+                  example: 15.3
+                bill_balance:
+                  type: number
+                  example: 22.1
+                bill_total:
+                  type: number
+                  example: 12.14
+                bill_status:
+                  type: string
+                  example: Submitted
+                bill_date:
+                  type: string
+                  format: date-time
+                  example: '2023-03-20T09:12:28Z'
+                bill_number:
+                  type: string
+                  example: '00000125'
+                invoice_url:
+                  type: string
+                  example: https://cdn-url.com/invoice.pdf
+      responses:
+        '200':
+          description: Returns the updated Billing object.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  billing:
+                    $ref: '#/components/schemas/Billing'
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: Validation error response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+    delete:
+      tags:
+      - Billings
+      security:
+      - bearerAuth:
+        - billings/write
+      summary: Delete a billing
+      operationId: deleteBilling
+      description: Delete a billing.
+      parameters:
+      - $ref: '#/components/parameters/IdParameter'
+      - in: query
+        name: q
+        description: For internal users only. Use Query DSL *query_string* syntax to send client id.
+        schema:
+          type: string
+          example: client_id:14ae0a8b-f2fa-436c-b652-69a88117df46
+        required: true
+      responses:
+        '204':
+          $ref: '#/components/responses/204ConfirmDeletion'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+          description: Error response.
+components:
+  parameters:
+    SortByParameters:
+      in: query
+      name: sort_by
+      description: Sort values by a specific property. See available sort by values in the table.
+      schema:
+        type: string
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
+    LimitParameters:
+      in: query
+      name: limit
+      description: Number of results to return. Default 50, max 250.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  responses:
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+    204ConfirmDeletion:
+      description: Confirms resource deletion.
+  schemas:
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+    Count:
+      allOf:
+      - type: object
+        properties:
+          count:
+            type: number
+            example: 8
+    Billing:
+      allOf:
+      - allOf:
+        - type: object
+          required:
+          - created_at
+          - updated_at
+          properties:
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2023-03-20T09:12:28Z'
+        - type: object
+          required:
+          - id
+          - client_id
+          properties:
+            id:
+              type: string
+              format: uuid
+              readOnly: true
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            client_id:
+              type: string
+              format: uuid
+              example: d290f1ee-6c54-4b01-90e6-d701748f0851
+            bill_applied_deposit_amount:
+              type: number
+              example: 12.34
+            total_shipping_fee:
+              type: number
+              example: 23.32
+            total_fulfillment_fee:
+              type: number
+              example: 10
+            total_supplement_fee:
+              type: number
+              example: 15.3
+            bill_balance:
+              type: number
+              example: 22.1
+            bill_total:
+              type: number
+              example: 12.14
+            bill_status:
+              type:
+              - string
+              - 'null'
+              enum:
+              - Submitted
+              - Bypassed
+              - Completed
+              example: Submitted
+            bill_date:
+              type:
+              - string
+              - 'null'
+              format: date-time
+              example: '2023-03-20T09:12:28Z'
+            bill_number:
+              type:
+              - string
+              - 'null'
+              example: '00000125'
+            invoice_url:
+              type:
+              - string
+              - 'null'
+              example: https://cdn-url.com/invoice.pdf
+            crm_id:
+              type:
+              - string
+              - 'null'
+              x-internal: true
+              description: Internal use only.
+              example: ABCDE12587AHSNNHS
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+  examples:
+    BillingFullSample:
+      summary: Create billing with required fields.
+      value:
+        bill_applied_deposit_amount: 12.34
+        total_shipping_fee: 23.32
+        total_fulfillment_fee: 10
+        total_supplement_fee: 15.3
+        bill_balance: 22.1
+        bill_total: 12.14
+        bill_status: Submitted
+        bill_date: '2023-03-20T09:12:28Z'
+        bill_number: '00000125'
+        invoice_url: https://cdn-url.com/invoice.pdf
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
