@@ -35,6 +35,19 @@ tags:
 - Health
 - Manufacturing
 - Fulfillment
+- E-Commerce
+- Personalization
+- Order
+- Shipping
+- Agents
+- MCP
+- Telehealth
+tags_raw:
+- Supplements
+- Nutrition
+- Health
+- Manufacturing
+- Fulfillment
 - Ecommerce
 - Personalization
 - Orders
@@ -59,6 +72,11 @@ apis:
   humanURL: https://okcapsule.com/mcp/developers
   baseURL: https://storefront.okcapsule.app/mcp
   tags:
+  - MCP
+  - Agents
+  - Order
+  - Catalog
+  tags_raw:
   - MCP
   - Agents
   - Orders
@@ -485,6 +503,8 @@ apis:
   humanURL: https://docs.okcapsule.app/docs/
   baseURL: https://na1-prod.okcapsule.app
   tags:
+  - Order
+  tags_raw:
   - Orders
   properties:
   - type: OpenAPI
@@ -818,6 +838,8 @@ apis:
   humanURL: https://docs.okcapsule.app/docs/
   baseURL: https://na1-prod.okcapsule.app
   tags:
+  - Product
+  tags_raw:
   - Products
   properties:
   - type: OpenAPI
@@ -838,6 +860,8 @@ apis:
   humanURL: https://docs.okcapsule.app/docs/
   baseURL: https://na1-prod.okcapsule.app
   tags:
+  - Status
+  tags_raw:
   - Statuses
   properties:
   - type: OpenAPI
@@ -918,6 +942,8 @@ apis:
   humanURL: https://docs.okcapsule.app/docs/
   baseURL: https://na1-prod.okcapsule.app
   tags:
+  - User
+  tags_raw:
   - Users
   properties:
   - type: OpenAPI
