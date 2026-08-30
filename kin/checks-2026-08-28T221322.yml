@@ -2,23 +2,28 @@
 kin_checks:
   slug: ok-capsule
   schema_version: 0.15.1
-  scored_at: '2026-08-27'
-  run_ts: 2026-08-27T140727
+  scored_at: '2026-08-28'
+  run_ts: 2026-08-28T221322
   note: Actionable checks only (missed + partial). earned/na are every other check
     in rubric/scoring-0.15.1.yml; counts below let you verify that.
   counts:
     total: 130
-    earned: 42
-    partial: 7
+    earned: 55
+    partial: 12
     missed: 44
-    na: 37
+    na: 19
   checks:
-  - id: multiple_apis
-    status: missed
   - id: apis_json_self_hosted
     status: missed
-  - id: examples_present
+  - id: openapi_3_2
     status: missed
+    detail: 0 of 42 openapi documents pass
+  - id: openapi_3_1
+    status: missed
+    detail: 0 of 42 openapi documents pass
+  - id: webhooks_or_callbacks
+    status: missed
+    detail: 0 of 42 openapi documents pass
   - id: asyncapi_present
     status: missed
   - id: json_schema_present
@@ -88,8 +93,6 @@ kin_checks:
     status: missed
   - id: idempotency
     status: missed
-  - id: openapi_examples
-    status: missed
   - id: event_surface_described
     status: missed
   - id: well_known_catalog
@@ -102,6 +105,25 @@ kin_checks:
     status: missed
   - id: agentic_commerce
     status: missed
+  - id: operations_operation_ids
+    status: partial
+    earned: 3.91
+    detail: 41 of 42 openapi documents pass
+  - id: error_responses_documented
+    status: partial
+    earned: 1.71
+    detail: 18 of 42 openapi documents pass
+  - id: examples_present
+    status: partial
+    earned: 1.82
+  - id: components_reuse
+    status: partial
+    earned: 0.36
+    detail: 5 of 42 openapi documents pass
+  - id: security_applied
+    status: partial
+    earned: 2.79
+    detail: 39 of 42 openapi documents pass
   - id: github_org_present
     status: partial
     earned: 1.0
@@ -117,10 +139,10 @@ kin_checks:
     status: partial
     earned: 9.0
     detail: 'grade: served'
-  - id: error_semantics
+  - id: openapi_examples
     status: partial
-    earned: 4.0
-    detail: 'grade: documented'
+    earned: 3.5
+    detail: 'grade: partial'
   - id: rate_limit_signal
     status: partial
     earned: 3.5
