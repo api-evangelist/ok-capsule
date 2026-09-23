@@ -3,81 +3,7 @@ info:
   description: '## Overview
 
 
-    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments. It is a REST API that accepts JSON requests, returns JSON responses, and uses standard HTTP methods and status codes.
-
-
-    **All requests must be made over HTTPS.**
-
-
-    📚 **Additional Resources:** [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) | [Recipes & Examples](https://docs.okcapsule.app/docs/category/recipes)
-
-
-    ## Getting Started
-
-
-    > **New to OK Capsule API?** Account and brand setup must be completed before contacting OK Capsule about API credentials. If you have not set up your account and brand yet, start with the [Getting Started Guide](https://docs.okcapsule.app/docs/getting-started) before proceeding.
-
-
-    1. **Set up your account** - Your OK Capsule account must be created and active
-
-    2. **Set up your brand** - At least one Product Line must be configured in your account
-
-    3. **Contact OK Capsule about API credentials** - Reach out to your OK Capsule representative once account and brand setup are complete
-
-    4. **Authenticate** - POST to `/v2/authentication/token` to get an access token
-
-    5. **List products** - GET `/v2/products` to see available supplements
-
-    6. **Create an order** - POST to `/v2/orders` with consumer and product details
-
-    7. **Track fulfillment** - Monitor order status and shipping via `/v2/orders` and `/v2/fulfillments`
-
-
-    ## Environments
-
-
-    | Environment | Purpose | Notes |
-
-    |-------------|---------|-------|
-
-    | **Production** | Live orders | Real fulfillment and shipping |
-
-    | **Stage** | Testing | Test data only, no real shipments |
-
-
-    ⚠️ Users and data are environment-specific. Stage credentials do not work in Production.
-
-
-    ## Core Concepts
-
-
-    | Term | Route | Description |
-
-    |------|-------|-------------|
-
-    | **Client** | `/v2/clients` | Your organization (business partner submitting orders) |
-
-    | **Consumer** | `/v2/consumers` | Your end customer who receives supplements |
-
-    | **Product** | `/v2/products` | A client-specific instance of an OKC Product with custom branding |
-
-    | **Order** | `/v2/orders` | A request to fulfill supplements for a consumer |
-
-    | **Order Line** | — | A set of pouches within an order (e.g., 30-day supply) |
-
-    | **Pouch** | — | An individual daily packet of supplements |
-
-    | **Fulfillment** | `/v2/fulfillments` | Shipping, tracking, and delivery information for an order |
-
-    | **Assembly** | `/v2/assemblies` | A client''s predefined bundle of products (commonly called a "pack") |
-
-    | **Product Line** | `/v2/product-lines` | A client''s marketing brand (appears on packaging) |
-
-    | **OKC Product** | — | A supplement in the OK Capsule master catalog (what OKC purchases from vendors) |
-
-    | **User** | `/v2/users` | An authorized person who accesses the API or portal |
-
-    | **Contact** | `/v2/contacts` | A person associated with a client, managed for communication purposes |'
+    The OK Capsule API enables you to programmatically create supplement orders, manage consumers, and track shipments.'
   version: 2.0.0
   title: OKC core API V2 Authentication API
   contact:
@@ -93,7 +19,7 @@ servers:
   url: https://na1-stage.okcapsule.app
 tags:
 - name: Authentication
-  description: 'OK Capsule API uses **Oauth2.0 with OpenID Connect**. It issues **access**, **id**, and **refresh** tokens. **Access** tokens is used to authenticate API requests and are short lived (1 day). *Id token** can be used by a client application to display user''s information. It is also short lived (1 day).  **Refresh** token is long lived (10 years) and is used to renew **access** and **id** tokens. Authentication to the API is performed via Bearer auth Authorization header: *Authorization: Bearer <access_token>*.'
+  description: 'OK Capsule API uses **Oauth2.0 with OpenID Connect**. It issues **access**, **id**, and **refresh** tokens. **Access** tokens is used to authenticate API requests and are short lived (1 day). *Id token** can be used by a client application to display user''s information. It is also short lived (1 day). **Refresh** token is long lived (10 years) and is used to renew **access** and **id** tokens. Authentication to the API is performed via Bearer auth Authorization header: *Authorization: Bearer *.'
 paths:
   /v2/authentication/token:
     post:
@@ -187,6 +113,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorModel'
           description: Error response.
+      operationId: postV2AuthenticationToken
+      x-operation-id-source: derived
   /v2/authentication/refresh-token:
     post:
       tags:
@@ -236,6 +164,8 @@ paths:
           $ref: '#/components/responses/422AuthValidationError'
         default:
           $ref: '#/components/responses/UnknownError'
+      operationId: postV2AuthenticationRefreshToken
+      x-operation-id-source: derived
   /v2/authentication/forgot-password:
     post:
       tags:
@@ -273,6 +203,8 @@ paths:
           $ref: '#/components/responses/422AuthValidationError'
         default:
           $ref: '#/components/responses/UnknownError'
+      operationId: postV2AuthenticationForgotPassword
+      x-operation-id-source: derived
   /v2/authentication/reset-password:
     post:
       tags:
@@ -316,6 +248,8 @@ paths:
           $ref: '#/components/responses/422AuthValidationError'
         default:
           $ref: '#/components/responses/UnknownError'
+      operationId: postV2AuthenticationResetPassword
+      x-operation-id-source: derived
   /v2/authentication/user:
     get:
       tags:
@@ -339,90 +273,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorModel'
           description: Error response.
+      operationId: getV2AuthenticationUser
+      x-operation-id-source: derived
 components:
-  responses:
-    UnauthorizedError:
-      description: Authentication information is missing or invalid
-      content:
-        application/json:
-          schema:
-            properties:
-              error:
-                properties:
-                  message:
-                    type: string
-                    example: Unauthorized
-                required:
-                - message
-                type: object
-            required:
-            - error
-            type: object
-    422AuthValidationError:
-      description: Validation error response from authentication endpoints (gateway service)
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-            - error
-            properties:
-              error:
-                type: object
-                required:
-                - message
-                - errors
-                properties:
-                  message:
-                    type: string
-                    example: Validation error
-                  errors:
-                    type: array
-                    items:
-                      type: object
-                      required:
-                      - message
-                      - type
-                      properties:
-                        message:
-                          type: string
-                          example: '''username'' is required'
-                        type:
-                          type: string
-                          example: any.required
-    UnknownError:
-      description: Error response.
-      content:
-        application/json:
-          schema:
-            title: Error Model
-            description: An error response from the OK Capsule API
-            type: object
-            properties:
-              error:
-                title: Error Model Content
-                type: object
-                description: Error details object
-                required:
-                - message
-                properties:
-                  errorCode:
-                    description: For some errors that could be handled programmatically, a short string indicating the error code.
-                    maxLength: 5000
-                    type: string
-                    example: RESOURCE_NOT_FOUND
-                  message:
-                    description: A human-readable message providing more details about the error.
-                    maxLength: 40000
-                    type: string
-                    example: The requested resource was not found
-              message:
-                description: Top-level error message (present in some error responses)
-                type: string
-                example: Internal Server Error
-            required:
-            - error
   schemas:
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
     User:
       allOf:
       - type: object
@@ -509,34 +391,88 @@ components:
             format: date-time
             readOnly: true
             example: '2023-03-20T09:12:28Z'
-    ErrorModel:
-      title: Error Model
-      description: An error response from the OK Capsule API
-      type: object
-      properties:
-        error:
-          title: Error Model Content
-          type: object
-          description: Error details object
-          required:
-          - message
-          properties:
-            errorCode:
-              description: For some errors that could be handled programmatically, a short string indicating the error code.
-              maxLength: 5000
-              type: string
-              example: RESOURCE_NOT_FOUND
-            message:
-              description: A human-readable message providing more details about the error.
-              maxLength: 40000
-              type: string
-              example: The requested resource was not found
-        message:
-          description: Top-level error message (present in some error responses)
-          type: string
-          example: Internal Server Error
-      required:
-      - error
+  responses:
+    422AuthValidationError:
+      description: Validation error response from authentication endpoints (gateway service)
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                required:
+                - message
+                - errors
+                properties:
+                  message:
+                    type: string
+                    example: Validation error
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - message
+                      - type
+                      properties:
+                        message:
+                          type: string
+                          example: '''username'' is required'
+                        type:
+                          type: string
+                          example: any.required
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+    UnauthorizedError:
+      description: Authentication information is missing or invalid
+      content:
+        application/json:
+          schema:
+            properties:
+              error:
+                properties:
+                  message:
+                    type: string
+                    example: Unauthorized
+                required:
+                - message
+                type: object
+            required:
+            - error
+            type: object
   securitySchemes:
     bearerAuth:
       type: http
