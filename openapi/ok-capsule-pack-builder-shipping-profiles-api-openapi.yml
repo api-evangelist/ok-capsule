@@ -83,6 +83,14 @@ paths:
                 $ref: '#/components/schemas/ErrorModel'
           description: Error response.
 components:
+  parameters:
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
   schemas:
     ErrorModel:
       title: Error Model
@@ -112,6 +120,36 @@ components:
           example: Internal Server Error
       required:
       - error
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
     ShippingProfile:
       allOf:
       - type: object
@@ -190,44 +228,6 @@ components:
             items:
               type: string
               example: gid://shopify/ProductVariant/123456789
-    ValidationError:
-      type: object
-      title: Validation Error
-      required:
-      - message
-      - errors
-      description: A validation error response from the OK Capsule API (Joi validation)
-      properties:
-        message:
-          description: A human-readable message indicating a validation error occurred.
-          maxLength: 40000
-          type: string
-          example: Validation error
-        errors:
-          description: An array of validation errors from Joi schema validation
-          type: array
-          items:
-            type: object
-            required:
-            - message
-            - type
-            properties:
-              message:
-                description: A human-readable message providing more details about the validation error.
-                type: string
-                example: '''business_name'' is required'
-              type:
-                description: The Joi validation type that failed.
-                type: string
-                example: any.required
-  parameters:
-    IdParameter:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-        minimum: 1
   securitySchemes:
     bearerAuth:
       type: http

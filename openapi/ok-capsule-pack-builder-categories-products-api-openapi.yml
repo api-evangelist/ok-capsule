@@ -294,35 +294,98 @@ paths:
                 $ref: '#/components/schemas/ErrorModel'
           description: Error response.
 components:
+  examples:
+    PackBuilderMultipleAddSingleProductCategorySample:
+      summary: Add single client product.
+      value:
+        client_products:
+        - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+          position: 2
+    PackBuilderCategoryProductsSample:
+      summary: Add a client product to category
+      value:
+        client_product_id: 6d28a691-1d4c-48fb-8c18-23e3557b1e05
+        position: 2
+    PackBuilderMultipleAddProductsCategorySample:
+      summary: Add multiple client products.
+      value:
+        client_products:
+        - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+          position: 2
+        - client_product_id: e640d058-ecda-4f48-ba2f-c0a59804f36f
+          position: 1
+        - client_product_id: a390f1ab-6c54-4b01-90e6-d701748f1837
+          position: 3
+  responses:
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+    204ConfirmDeletion:
+      description: Confirms resource deletion.
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
   schemas:
-    ErrorModel:
-      title: Error Model
-      description: An error response from the OK Capsule API
-      type: object
-      properties:
-        error:
-          title: Error Model Content
-          type: object
-          description: Error details object
-          required:
-          - message
-          properties:
-            errorCode:
-              description: For some errors that could be handled programmatically, a short string indicating the error code.
-              maxLength: 5000
-              type: string
-              example: RESOURCE_NOT_FOUND
-            message:
-              description: A human-readable message providing more details about the error.
-              maxLength: 40000
-              type: string
-              example: The requested resource was not found
-        message:
-          description: Top-level error message (present in some error responses)
-          type: string
-          example: Internal Server Error
-      required:
-      - error
     ValidationError:
       type: object
       title: Validation Error
@@ -353,6 +416,51 @@ components:
                 description: The Joi validation type that failed.
                 type: string
                 example: any.required
+    PackBuilderCategoriesClientProduct:
+      allOf:
+      - type: object
+        required:
+        - category_id
+        - client_product_id
+        - client_product_position
+        - client_product
+        properties:
+          category_id:
+            type: string
+            format: uuid
+            example: d68bc04b-5261-4055-9c64-c81e4cbb871e
+          client_product_id:
+            type: string
+            format: uuid
+            example: 29f24a23-68dd-41bb-9aba-f958c10c7d39
+          client_product_position:
+            type: number
+            example: 2
+          client_product:
+            type: object
+            required:
+            - id
+            - product_line_id
+            - name
+            - product_name
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: 3ab920e6-9d59-4f33-aea0-5045f726dafb
+              product_line_id:
+                type: string
+                format: uuid
+                example: 3ab920e6-9d59-4f33-aea0-5045f726dafb
+              name:
+                type: string
+                example: SP-0084
+              product_name:
+                type: string
+                example: Vegan Women's pack (energy+joint)
+              position:
+                type: number
+                example: 2
     SyncProcessResponse:
       allOf:
       - type: object
@@ -426,142 +534,34 @@ components:
             format: date-time
             readOnly: true
             example: '2023-03-20T09:12:28Z'
-    PackBuilderCategoriesClientProduct:
-      allOf:
-      - type: object
-        required:
-        - category_id
-        - client_product_id
-        - client_product_position
-        - client_product
-        properties:
-          category_id:
-            type: string
-            format: uuid
-            example: d68bc04b-5261-4055-9c64-c81e4cbb871e
-          client_product_id:
-            type: string
-            format: uuid
-            example: 29f24a23-68dd-41bb-9aba-f958c10c7d39
-          client_product_position:
-            type: number
-            example: 2
-          client_product:
-            type: object
-            required:
-            - id
-            - product_line_id
-            - name
-            - product_name
-            properties:
-              id:
-                type: string
-                format: uuid
-                example: 3ab920e6-9d59-4f33-aea0-5045f726dafb
-              product_line_id:
-                type: string
-                format: uuid
-                example: 3ab920e6-9d59-4f33-aea0-5045f726dafb
-              name:
-                type: string
-                example: SP-0084
-              product_name:
-                type: string
-                example: Vegan Women's pack (energy+joint)
-              position:
-                type: number
-                example: 2
-  examples:
-    PackBuilderCategoryProductsSample:
-      summary: Add a client product to category
-      value:
-        client_product_id: 6d28a691-1d4c-48fb-8c18-23e3557b1e05
-        position: 2
-    PackBuilderMultipleAddSingleProductCategorySample:
-      summary: Add single client product.
-      value:
-        client_products:
-        - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-          position: 2
-    PackBuilderMultipleAddProductsCategorySample:
-      summary: Add multiple client products.
-      value:
-        client_products:
-        - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-          position: 2
-        - client_product_id: e640d058-ecda-4f48-ba2f-c0a59804f36f
-          position: 1
-        - client_product_id: a390f1ab-6c54-4b01-90e6-d701748f1837
-          position: 3
-  responses:
-    UnknownError:
-      description: Error response.
-      content:
-        application/json:
-          schema:
-            title: Error Model
-            description: An error response from the OK Capsule API
-            type: object
-            properties:
-              error:
-                title: Error Model Content
-                type: object
-                description: Error details object
-                required:
-                - message
-                properties:
-                  errorCode:
-                    description: For some errors that could be handled programmatically, a short string indicating the error code.
-                    maxLength: 5000
-                    type: string
-                    example: RESOURCE_NOT_FOUND
-                  message:
-                    description: A human-readable message providing more details about the error.
-                    maxLength: 40000
-                    type: string
-                    example: The requested resource was not found
-              message:
-                description: Top-level error message (present in some error responses)
-                type: string
-                example: Internal Server Error
-            required:
-            - error
-    422ValidationError:
-      description: Validation error response.
-      content:
-        application/json:
-          schema:
-            type: object
-            title: Validation Error
-            required:
-            - message
-            - errors
-            description: A validation error response from the OK Capsule API (Joi validation)
-            properties:
-              message:
-                description: A human-readable message indicating a validation error occurred.
-                maxLength: 40000
-                type: string
-                example: Validation error
-              errors:
-                description: An array of validation errors from Joi schema validation
-                type: array
-                items:
-                  type: object
-                  required:
-                  - message
-                  - type
-                  properties:
-                    message:
-                      description: A human-readable message providing more details about the validation error.
-                      type: string
-                      example: '''business_name'' is required'
-                    type:
-                      description: The Joi validation type that failed.
-                      type: string
-                      example: any.required
-    204ConfirmDeletion:
-      description: Confirms resource deletion.
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
   parameters:
     IdParameter:
       in: path
