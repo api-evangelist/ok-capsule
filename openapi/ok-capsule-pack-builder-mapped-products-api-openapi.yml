@@ -204,18 +204,25 @@ paths:
           description: Error response.
 components:
   parameters:
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
     QueryParameters:
       in: query
       name: q
       description: Use Query DSL *query_string* syntax
       schema:
         type: string
-    SortByParameters:
-      in: query
-      name: sort_by
-      description: Sort values by a specific property. See available sort by values in the table.
+    IdParameter:
+      in: path
+      name: id
+      required: true
       schema:
         type: string
+        minimum: 1
     LimitParameters:
       in: query
       name: limit
@@ -225,50 +232,16 @@ components:
         type: integer
         minimum: 1
         maximum: 250
-    IdParameter:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-        minimum: 1
-    CursorParameters:
+    SortByParameters:
       in: query
-      name: cursor
-      description: Return results before/after a specific record.
+      name: sort_by
+      description: Sort values by a specific property. See available sort by values in the table.
       schema:
         type: string
+  responses:
+    204ConfirmDeletion:
+      description: Confirms resource deletion.
   schemas:
-    ValidationError:
-      type: object
-      title: Validation Error
-      required:
-      - message
-      - errors
-      description: A validation error response from the OK Capsule API (Joi validation)
-      properties:
-        message:
-          description: A human-readable message indicating a validation error occurred.
-          maxLength: 40000
-          type: string
-          example: Validation error
-        errors:
-          description: An array of validation errors from Joi schema validation
-          type: array
-          items:
-            type: object
-            required:
-            - message
-            - type
-            properties:
-              message:
-                description: A human-readable message providing more details about the validation error.
-                type: string
-                example: '''business_name'' is required'
-              type:
-                description: The Joi validation type that failed.
-                type: string
-                example: any.required
     PackBuilderProductsMapper:
       allOf:
       - type: object
@@ -360,9 +333,36 @@ components:
           example: Internal Server Error
       required:
       - error
-  responses:
-    204ConfirmDeletion:
-      description: Confirms resource deletion.
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
   securitySchemes:
     bearerAuth:
       type: http

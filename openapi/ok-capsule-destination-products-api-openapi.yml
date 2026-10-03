@@ -113,43 +113,47 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 components:
-  schemas:
-    DestinationProduct:
-      allOf:
-      - type: object
-        properties:
-          sync_process_id:
-            type: string
-            format: uuid
-            example: a390f1ab-6c54-4b01-90e6-d701748f1837
-          status:
+  parameters:
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+  responses:
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
             type: object
             properties:
-              result:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
                 type: string
-                enum:
-                - Success
-                - Fail
-                example: Success
-              error_message:
-                type: string
-                example: Error occurred
-  examples:
-    DestinationProductsSingleSample:
-      summary: Sync single client product.
-      value:
-        action: CREATE
-        product_ids:
-        - d290f1ee-6c54-4b01-90e6-d701748f0851
-    DestinationProductsMultiSample:
-      summary: Sync multiple client products.
-      value:
-        action: CREATE
-        product_ids:
-        - d290f1ee-6c54-4b01-90e6-d701748f0851
-        - e640d058-ecda-4f48-ba2f-c0a59804f36f
-        - a390f1ab-6c54-4b01-90e6-d701748f1837
-  responses:
+                example: Internal Server Error
+            required:
+            - error
     422ValidationError:
       description: Validation error response.
       content:
@@ -184,46 +188,42 @@ components:
                       description: The Joi validation type that failed.
                       type: string
                       example: any.required
-    UnknownError:
-      description: Error response.
-      content:
-        application/json:
-          schema:
-            title: Error Model
-            description: An error response from the OK Capsule API
+  examples:
+    DestinationProductsSingleSample:
+      summary: Sync single client product.
+      value:
+        action: CREATE
+        product_ids:
+        - d290f1ee-6c54-4b01-90e6-d701748f0851
+    DestinationProductsMultiSample:
+      summary: Sync multiple client products.
+      value:
+        action: CREATE
+        product_ids:
+        - d290f1ee-6c54-4b01-90e6-d701748f0851
+        - e640d058-ecda-4f48-ba2f-c0a59804f36f
+        - a390f1ab-6c54-4b01-90e6-d701748f1837
+  schemas:
+    DestinationProduct:
+      allOf:
+      - type: object
+        properties:
+          sync_process_id:
+            type: string
+            format: uuid
+            example: a390f1ab-6c54-4b01-90e6-d701748f1837
+          status:
             type: object
             properties:
-              error:
-                title: Error Model Content
-                type: object
-                description: Error details object
-                required:
-                - message
-                properties:
-                  errorCode:
-                    description: For some errors that could be handled programmatically, a short string indicating the error code.
-                    maxLength: 5000
-                    type: string
-                    example: RESOURCE_NOT_FOUND
-                  message:
-                    description: A human-readable message providing more details about the error.
-                    maxLength: 40000
-                    type: string
-                    example: The requested resource was not found
-              message:
-                description: Top-level error message (present in some error responses)
+              result:
                 type: string
-                example: Internal Server Error
-            required:
-            - error
-  parameters:
-    IdParameter:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-        minimum: 1
+                enum:
+                - Success
+                - Fail
+                example: Success
+              error_message:
+                type: string
+                example: Error occurred
   securitySchemes:
     bearerAuth:
       type: http

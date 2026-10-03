@@ -83,43 +83,7 @@ paths:
                 $ref: '#/components/schemas/ErrorModel'
           description: Error response.
 components:
-  parameters:
-    IdParameter:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-        minimum: 1
   schemas:
-    ErrorModel:
-      title: Error Model
-      description: An error response from the OK Capsule API
-      type: object
-      properties:
-        error:
-          title: Error Model Content
-          type: object
-          description: Error details object
-          required:
-          - message
-          properties:
-            errorCode:
-              description: For some errors that could be handled programmatically, a short string indicating the error code.
-              maxLength: 5000
-              type: string
-              example: RESOURCE_NOT_FOUND
-            message:
-              description: A human-readable message providing more details about the error.
-              maxLength: 40000
-              type: string
-              example: The requested resource was not found
-        message:
-          description: Top-level error message (present in some error responses)
-          type: string
-          example: Internal Server Error
-      required:
-      - error
     ValidationError:
       type: object
       title: Validation Error
@@ -228,6 +192,42 @@ components:
             items:
               type: string
               example: gid://shopify/ProductVariant/123456789
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
+  parameters:
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
   securitySchemes:
     bearerAuth:
       type: http

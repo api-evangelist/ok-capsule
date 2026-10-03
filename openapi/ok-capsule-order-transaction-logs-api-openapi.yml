@@ -115,20 +115,6 @@ components:
           entity_id:
             type: string
             example: d290f1ee-6c54-4b01-90e6-d701748f0851
-  parameters:
-    IdParameter:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-        minimum: 1
-    QueryParameters:
-      in: query
-      name: q
-      description: Use Query DSL *query_string* syntax
-      schema:
-        type: string
   responses:
     UnknownError:
       description: Error response.
@@ -162,6 +148,20 @@ components:
                 example: Internal Server Error
             required:
             - error
+  parameters:
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
   securitySchemes:
     bearerAuth:
       type: http

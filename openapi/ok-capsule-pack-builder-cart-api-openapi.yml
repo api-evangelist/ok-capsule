@@ -188,15 +188,65 @@ paths:
                 $ref: '#/components/schemas/ErrorModel'
           description: Error response.
 components:
-  parameters:
-    IdParameter:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-        minimum: 1
   schemas:
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
     Cart:
       allOf:
       - type: object
@@ -284,64 +334,14 @@ components:
             format: date-time
             readOnly: true
             example: '2023-03-20T09:12:28Z'
-    ErrorModel:
-      title: Error Model
-      description: An error response from the OK Capsule API
-      type: object
-      properties:
-        error:
-          title: Error Model Content
-          type: object
-          description: Error details object
-          required:
-          - message
-          properties:
-            errorCode:
-              description: For some errors that could be handled programmatically, a short string indicating the error code.
-              maxLength: 5000
-              type: string
-              example: RESOURCE_NOT_FOUND
-            message:
-              description: A human-readable message providing more details about the error.
-              maxLength: 40000
-              type: string
-              example: The requested resource was not found
-        message:
-          description: Top-level error message (present in some error responses)
-          type: string
-          example: Internal Server Error
-      required:
-      - error
-    ValidationError:
-      type: object
-      title: Validation Error
-      required:
-      - message
-      - errors
-      description: A validation error response from the OK Capsule API (Joi validation)
-      properties:
-        message:
-          description: A human-readable message indicating a validation error occurred.
-          maxLength: 40000
-          type: string
-          example: Validation error
-        errors:
-          description: An array of validation errors from Joi schema validation
-          type: array
-          items:
-            type: object
-            required:
-            - message
-            - type
-            properties:
-              message:
-                description: A human-readable message providing more details about the validation error.
-                type: string
-                example: '''business_name'' is required'
-              type:
-                description: The Joi validation type that failed.
-                type: string
-                example: any.required
+  parameters:
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
   securitySchemes:
     bearerAuth:
       type: http

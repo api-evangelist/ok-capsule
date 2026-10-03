@@ -1217,379 +1217,35 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
 components:
-  examples:
-    OrderRequiredWithConsumerIdSample:
-      summary: Creates an order with only required fields.
-      value:
-        consumer:
-          id: a079ccd0-e612-4a0c-9342-c169e18adb4f
-        shipping_address:
-          addressee: Lisa Simpson
-          address1: 742 Evergreen Terrace
-          city: Springfield
-          province_name: Ohio
-          postal_code: '45501'
-          country_name: United States
-        order_lines:
-        - pouches:
-          - contents:
-            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-    OrderWithMultipleTOAsSample:
-      summary: Creates an order with multiple times of administration.
-      value:
-        consumer:
-          id: a079ccd0-e612-4a0c-9342-c169e18adb4f
-        shipping_address:
-          addressee: Lisa Simpson
-          address1: 742 Evergreen Terrace
-          city: Springfield
-          province_name: Ohio
-          postal_code: '45501'
-          country_name: United States
-        order_lines:
-        - pouches:
-          - time_of_administration: Morning
-            contents:
-            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-          - time_of_administration: Midday
-            contents:
-            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-    OrderWithProductsAndPackSample:
-      summary: Creates an order with both individual products and a premade pack/assembly.
-      value:
-        consumer:
-          id: a079ccd0-e612-4a0c-9342-c169e18adb4f
-        shipping_address:
-          addressee: Lisa Simpson
-          address1: 742 Evergreen Terrace
-          city: Springfield
-          province_name: Ohio
-          postal_code: '45501'
-          country_name: United States
-        order_lines:
-        - pouches:
-          - custom_label: Individual products
-            contents:
-            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-              serving_size: 2
-            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-        - pouches:
-          - custom_label: A premade pack
-          - pack_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-    OrderWithMultipleOrderLinesSample:
-      summary: Creates an order with multiple orderlines.
-      value:
-        consumer:
-          id: a079ccd0-e612-4a0c-9342-c169e18adb4f
-        shipping_address:
-          addressee: Lisa Simpson
-          address1: 742 Evergreen Terrace
-          city: Springfield
-          province_name: Ohio
-          postal_code: '45501'
-          country_name: United States
-        order_lines:
-        - pouches:
-          - custom_label: My order
-            contents:
-            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-        - pouches:
-          - custom_label: My wife's order
-            contents:
-            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-    OrderWithConsumerFieldsSample:
-      summary: Creates an order with only required fields and consumer fields.
-      value:
-        consumer:
-          first_name: Bart
-          last_name: Simpson
-          email: user@email.com
-        shipping_address:
-          addressee: Lisa Simpson
-          address1: 742 Evergreen Terrace
-          city: Springfield
-          province_name: Ohio
-          postal_code: '45501'
-          country_name: United States
-        order_lines:
-        - pouches:
-          - contents:
-            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-    OrderWithAssemblySample:
-      summary: Creates an order with a pack/assembly.
-      value:
-        consumer:
-          id: a079ccd0-e612-4a0c-9342-c169e18adb4f
-        shipping_address:
-          addressee: Lisa Simpson
-          address1: 742 Evergreen Terrace
-          city: Springfield
-          province_name: Ohio
-          postal_code: '45501'
-          country_name: United States
-        order_lines:
-          name: Adam
-          physician_name: Dr. Bob
-          pouches:
-          - time_of_administration: Morning
-            custom_label: My Special Pack
-            pack_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-    OrderFullSample:
-      summary: Creates an order with all fields.
-      value:
-        consumer:
-          first_name: Bart
-          last_name: Simpson
-          email: user@email.com
-        source_client_order_id: '6389283792'
-        client_custom_order_id: AZE89283028
-        order_type: DTC
-        email: example@email.com
-        phone_number: 18885551212
-        shipping_address:
-          addressee: Lisa Simpson
-          address1: 742 Evergreen Terrace
-          city: Springfield
-          province_name: Ohio
-          postal_code: '45501'
-          country_name: United States
-        okc_affiliate_id: client12345
-        order_lines:
-        - physician_name: Dr. Nick
-          duration: 30
-          client_custom_order_line_id: '123456'
-          has_special_handling: true
-          special_handling_instructions: Special handling instructions
-          client_custom_pack_name: Sleep Pack
-          pouches:
-          - time_of_administration: Morning
-            custom_label: My Custom Label
-            cycle: 1;2;5
-            cycle_length: 7
-            duration: 20
-            contents:
-            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
-              serving_size: 2
-  parameters:
-    SortByParameters:
-      in: query
-      name: sort_by
-      description: Sort values by a specific property. See available sort by values in the table.
-      schema:
-        type: string
-    LimitParameters:
-      in: query
-      name: limit
-      description: Number of results to return. Default 50, max 250.
-      required: false
-      schema:
-        type: integer
-        minimum: 1
-        maximum: 250
-    QueryParameters:
-      in: query
-      name: q
-      description: Use Query DSL *query_string* syntax
-      schema:
-        type: string
-    CursorParameters:
-      in: query
-      name: cursor
-      description: Return results before/after a specific record.
-      schema:
-        type: string
-    IdParameter:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-        minimum: 1
-  responses:
-    UnknownError:
-      description: Error response.
-      content:
-        application/json:
-          schema:
-            title: Error Model
-            description: An error response from the OK Capsule API
-            type: object
-            properties:
-              error:
-                title: Error Model Content
-                type: object
-                description: Error details object
-                required:
-                - message
-                properties:
-                  errorCode:
-                    description: For some errors that could be handled programmatically, a short string indicating the error code.
-                    maxLength: 5000
-                    type: string
-                    example: RESOURCE_NOT_FOUND
-                  message:
-                    description: A human-readable message providing more details about the error.
-                    maxLength: 40000
-                    type: string
-                    example: The requested resource was not found
-              message:
-                description: Top-level error message (present in some error responses)
-                type: string
-                example: Internal Server Error
-            required:
-            - error
-    422ValidationError:
-      description: Validation error response.
-      content:
-        application/json:
-          schema:
-            type: object
-            title: Validation Error
-            required:
-            - message
-            - errors
-            description: A validation error response from the OK Capsule API (Joi validation)
-            properties:
-              message:
-                description: A human-readable message indicating a validation error occurred.
-                maxLength: 40000
-                type: string
-                example: Validation error
-              errors:
-                description: An array of validation errors from Joi schema validation
-                type: array
-                items:
-                  type: object
-                  required:
-                  - message
-                  - type
-                  properties:
-                    message:
-                      description: A human-readable message providing more details about the validation error.
-                      type: string
-                      example: '''business_name'' is required'
-                    type:
-                      description: The Joi validation type that failed.
-                      type: string
-                      example: any.required
   schemas:
-    ValidationError:
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
       type: object
-      title: Validation Error
-      required:
-      - message
-      - errors
-      description: A validation error response from the OK Capsule API (Joi validation)
       properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
         message:
-          description: A human-readable message indicating a validation error occurred.
-          maxLength: 40000
+          description: Top-level error message (present in some error responses)
           type: string
-          example: Validation error
-        errors:
-          description: An array of validation errors from Joi schema validation
-          type: array
-          items:
-            type: object
-            required:
-            - message
-            - type
-            properties:
-              message:
-                description: A human-readable message providing more details about the validation error.
-                type: string
-                example: '''business_name'' is required'
-              type:
-                description: The Joi validation type that failed.
-                type: string
-                example: any.required
-    Cart:
-      allOf:
-      - type: object
-        required:
-        - id
-        - pack_builder_id
-        - order_id
-        - cart_lines
-        properties:
-          id:
-            type: string
-            format: uuid
-            example: d290f1ee-6c54-4b01-90e6-d701748f0851
-          pack_builder_id:
-            type: string
-            format: uuid
-            example: 8e697e7e-02eb-4a2c-8234-5b6298a56c44
-          order_id:
-            type: string
-            format: uuid
-            example: 9b31ad69-bbf3-448a-b646-fb70d0cb6fa1
-          cart_lines:
-            type: array
-            items:
-              type: object
-              required:
-              - id
-              - cart_id
-              - product_id
-              - time_of_administration
-              - cycle
-              - cycle_length
-              - serving_size
-              - duration
-              properties:
-                id:
-                  type: string
-                  example: d290f1ee-6c54-4b01-90e6-d701748f0851
-                cart_id:
-                  type: string
-                  example: 16c7f308-ce24-46d0-b4ad-39e291d8049b
-                product_id:
-                  type: string
-                  example: 142c9cf7-c665-4beb-a24f-79f68334d232
-                time_of_administration:
-                  type: string
-                  enum:
-                  - Morning
-                  - Midday
-                  - Evening
-                  example: Morning
-                cycle:
-                  type: string
-                  example: '"daily" or a list of semi-colon delimited positive integers less than or equal to the `cycle_length`: "1;3;5;7;9"'
-                cycle_length:
-                  type: integer
-                  enum:
-                  - 7
-                  - 10
-                  example: 7
-                serving_size:
-                  type: integer
-                  example: 2
-                duration:
-                  type: integer
-                  example: 30
-                pack_name:
-                  type: string
-                  example: Pack name
-                health_goal:
-                  type: string
-                  example: Health goal
-      - type: object
-        required:
-        - created_at
-        - updated_at
-        properties:
-          created_at:
-            type: string
-            format: date-time
-            readOnly: true
-            example: '2023-03-20T09:12:28Z'
-          updated_at:
-            type: string
-            format: date-time
-            readOnly: true
-            example: '2023-03-20T09:12:28Z'
+          example: Internal Server Error
+      required:
+      - error
     Order:
       allOf:
       - allOf:
@@ -2139,34 +1795,6 @@ components:
             format: date-time
             readOnly: true
             example: '2023-03-20T09:12:28Z'
-    ErrorModel:
-      title: Error Model
-      description: An error response from the OK Capsule API
-      type: object
-      properties:
-        error:
-          title: Error Model Content
-          type: object
-          description: Error details object
-          required:
-          - message
-          properties:
-            errorCode:
-              description: For some errors that could be handled programmatically, a short string indicating the error code.
-              maxLength: 5000
-              type: string
-              example: RESOURCE_NOT_FOUND
-            message:
-              description: A human-readable message providing more details about the error.
-              maxLength: 40000
-              type: string
-              example: The requested resource was not found
-        message:
-          description: Top-level error message (present in some error responses)
-          type: string
-          example: Internal Server Error
-      required:
-      - error
     Count:
       allOf:
       - type: object
@@ -2174,6 +1802,378 @@ components:
           count:
             type: number
             example: 8
+    Cart:
+      allOf:
+      - type: object
+        required:
+        - id
+        - pack_builder_id
+        - order_id
+        - cart_lines
+        properties:
+          id:
+            type: string
+            format: uuid
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+          pack_builder_id:
+            type: string
+            format: uuid
+            example: 8e697e7e-02eb-4a2c-8234-5b6298a56c44
+          order_id:
+            type: string
+            format: uuid
+            example: 9b31ad69-bbf3-448a-b646-fb70d0cb6fa1
+          cart_lines:
+            type: array
+            items:
+              type: object
+              required:
+              - id
+              - cart_id
+              - product_id
+              - time_of_administration
+              - cycle
+              - cycle_length
+              - serving_size
+              - duration
+              properties:
+                id:
+                  type: string
+                  example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                cart_id:
+                  type: string
+                  example: 16c7f308-ce24-46d0-b4ad-39e291d8049b
+                product_id:
+                  type: string
+                  example: 142c9cf7-c665-4beb-a24f-79f68334d232
+                time_of_administration:
+                  type: string
+                  enum:
+                  - Morning
+                  - Midday
+                  - Evening
+                  example: Morning
+                cycle:
+                  type: string
+                  example: '"daily" or a list of semi-colon delimited positive integers less than or equal to the `cycle_length`: "1;3;5;7;9"'
+                cycle_length:
+                  type: integer
+                  enum:
+                  - 7
+                  - 10
+                  example: 7
+                serving_size:
+                  type: integer
+                  example: 2
+                duration:
+                  type: integer
+                  example: 30
+                pack_name:
+                  type: string
+                  example: Pack name
+                health_goal:
+                  type: string
+                  example: Health goal
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
+  responses:
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+  examples:
+    OrderWithConsumerFieldsSample:
+      summary: Creates an order with only required fields and consumer fields.
+      value:
+        consumer:
+          first_name: Bart
+          last_name: Simpson
+          email: user@email.com
+        shipping_address:
+          addressee: Lisa Simpson
+          address1: 742 Evergreen Terrace
+          city: Springfield
+          province_name: Ohio
+          postal_code: '45501'
+          country_name: United States
+        order_lines:
+        - pouches:
+          - contents:
+            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+    OrderFullSample:
+      summary: Creates an order with all fields.
+      value:
+        consumer:
+          first_name: Bart
+          last_name: Simpson
+          email: user@email.com
+        source_client_order_id: '6389283792'
+        client_custom_order_id: AZE89283028
+        order_type: DTC
+        email: example@email.com
+        phone_number: 18885551212
+        shipping_address:
+          addressee: Lisa Simpson
+          address1: 742 Evergreen Terrace
+          city: Springfield
+          province_name: Ohio
+          postal_code: '45501'
+          country_name: United States
+        okc_affiliate_id: client12345
+        order_lines:
+        - physician_name: Dr. Nick
+          duration: 30
+          client_custom_order_line_id: '123456'
+          has_special_handling: true
+          special_handling_instructions: Special handling instructions
+          client_custom_pack_name: Sleep Pack
+          pouches:
+          - time_of_administration: Morning
+            custom_label: My Custom Label
+            cycle: 1;2;5
+            cycle_length: 7
+            duration: 20
+            contents:
+            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+              serving_size: 2
+    OrderWithAssemblySample:
+      summary: Creates an order with a pack/assembly.
+      value:
+        consumer:
+          id: a079ccd0-e612-4a0c-9342-c169e18adb4f
+        shipping_address:
+          addressee: Lisa Simpson
+          address1: 742 Evergreen Terrace
+          city: Springfield
+          province_name: Ohio
+          postal_code: '45501'
+          country_name: United States
+        order_lines:
+          name: Adam
+          physician_name: Dr. Bob
+          pouches:
+          - time_of_administration: Morning
+            custom_label: My Special Pack
+            pack_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+    OrderWithProductsAndPackSample:
+      summary: Creates an order with both individual products and a premade pack/assembly.
+      value:
+        consumer:
+          id: a079ccd0-e612-4a0c-9342-c169e18adb4f
+        shipping_address:
+          addressee: Lisa Simpson
+          address1: 742 Evergreen Terrace
+          city: Springfield
+          province_name: Ohio
+          postal_code: '45501'
+          country_name: United States
+        order_lines:
+        - pouches:
+          - custom_label: Individual products
+            contents:
+            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+              serving_size: 2
+            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+        - pouches:
+          - custom_label: A premade pack
+          - pack_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+    OrderWithMultipleOrderLinesSample:
+      summary: Creates an order with multiple orderlines.
+      value:
+        consumer:
+          id: a079ccd0-e612-4a0c-9342-c169e18adb4f
+        shipping_address:
+          addressee: Lisa Simpson
+          address1: 742 Evergreen Terrace
+          city: Springfield
+          province_name: Ohio
+          postal_code: '45501'
+          country_name: United States
+        order_lines:
+        - pouches:
+          - custom_label: My order
+            contents:
+            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+        - pouches:
+          - custom_label: My wife's order
+            contents:
+            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+    OrderRequiredWithConsumerIdSample:
+      summary: Creates an order with only required fields.
+      value:
+        consumer:
+          id: a079ccd0-e612-4a0c-9342-c169e18adb4f
+        shipping_address:
+          addressee: Lisa Simpson
+          address1: 742 Evergreen Terrace
+          city: Springfield
+          province_name: Ohio
+          postal_code: '45501'
+          country_name: United States
+        order_lines:
+        - pouches:
+          - contents:
+            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+    OrderWithMultipleTOAsSample:
+      summary: Creates an order with multiple times of administration.
+      value:
+        consumer:
+          id: a079ccd0-e612-4a0c-9342-c169e18adb4f
+        shipping_address:
+          addressee: Lisa Simpson
+          address1: 742 Evergreen Terrace
+          city: Springfield
+          province_name: Ohio
+          postal_code: '45501'
+          country_name: United States
+        order_lines:
+        - pouches:
+          - time_of_administration: Morning
+            contents:
+            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+          - time_of_administration: Midday
+            contents:
+            - client_product_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+  parameters:
+    LimitParameters:
+      in: query
+      name: limit
+      description: Number of results to return. Default 50, max 250.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+    SortByParameters:
+      in: query
+      name: sort_by
+      description: Sort values by a specific property. See available sort by values in the table.
+      schema:
+        type: string
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
   securitySchemes:
     bearerAuth:
       type: http

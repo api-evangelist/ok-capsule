@@ -329,18 +329,25 @@ paths:
           $ref: '#/components/responses/204ConfirmDeletion'
 components:
   parameters:
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
     QueryParameters:
       in: query
       name: q
       description: Use Query DSL *query_string* syntax
       schema:
         type: string
-    SortByParameters:
-      in: query
-      name: sort_by
-      description: Sort values by a specific property. See available sort by values in the table.
+    IdParameter:
+      in: path
+      name: id
+      required: true
       schema:
         type: string
+        minimum: 1
     LimitParameters:
       in: query
       name: limit
@@ -350,19 +357,81 @@ components:
         type: integer
         minimum: 1
         maximum: 250
-    IdParameter:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-        minimum: 1
-    CursorParameters:
+    SortByParameters:
       in: query
-      name: cursor
-      description: Return results before/after a specific record.
+      name: sort_by
+      description: Sort values by a specific property. See available sort by values in the table.
       schema:
         type: string
+  responses:
+    204ConfirmDeletion:
+      description: Confirms resource deletion.
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
   schemas:
     Consumer:
       allOf:
@@ -438,6 +507,34 @@ components:
             format: date-time
             readOnly: true
             example: '2023-03-20T09:12:28Z'
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
     ValidationError:
       type: object
       title: Validation Error
@@ -475,41 +572,7 @@ components:
           count:
             type: number
             example: 8
-    ErrorModel:
-      title: Error Model
-      description: An error response from the OK Capsule API
-      type: object
-      properties:
-        error:
-          title: Error Model Content
-          type: object
-          description: Error details object
-          required:
-          - message
-          properties:
-            errorCode:
-              description: For some errors that could be handled programmatically, a short string indicating the error code.
-              maxLength: 5000
-              type: string
-              example: RESOURCE_NOT_FOUND
-            message:
-              description: A human-readable message providing more details about the error.
-              maxLength: 40000
-              type: string
-              example: The requested resource was not found
-        message:
-          description: Top-level error message (present in some error responses)
-          type: string
-          example: Internal Server Error
-      required:
-      - error
   examples:
-    ConsumerRequiredSample:
-      summary: Creates a consumer with only the required fields.
-      value:
-        email: john@example.com
-        first_name: John
-        last_name: Doe
     ConsumerFullSample:
       summary: Creates a consumer.
       value:
@@ -518,75 +581,12 @@ components:
         last_name: Parker
         phone_number: 805-708-9847
         client_custom_consumer_id: ABCDE98765-789-89
-  responses:
-    422ValidationError:
-      description: Validation error response.
-      content:
-        application/json:
-          schema:
-            type: object
-            title: Validation Error
-            required:
-            - message
-            - errors
-            description: A validation error response from the OK Capsule API (Joi validation)
-            properties:
-              message:
-                description: A human-readable message indicating a validation error occurred.
-                maxLength: 40000
-                type: string
-                example: Validation error
-              errors:
-                description: An array of validation errors from Joi schema validation
-                type: array
-                items:
-                  type: object
-                  required:
-                  - message
-                  - type
-                  properties:
-                    message:
-                      description: A human-readable message providing more details about the validation error.
-                      type: string
-                      example: '''business_name'' is required'
-                    type:
-                      description: The Joi validation type that failed.
-                      type: string
-                      example: any.required
-    204ConfirmDeletion:
-      description: Confirms resource deletion.
-    UnknownError:
-      description: Error response.
-      content:
-        application/json:
-          schema:
-            title: Error Model
-            description: An error response from the OK Capsule API
-            type: object
-            properties:
-              error:
-                title: Error Model Content
-                type: object
-                description: Error details object
-                required:
-                - message
-                properties:
-                  errorCode:
-                    description: For some errors that could be handled programmatically, a short string indicating the error code.
-                    maxLength: 5000
-                    type: string
-                    example: RESOURCE_NOT_FOUND
-                  message:
-                    description: A human-readable message providing more details about the error.
-                    maxLength: 40000
-                    type: string
-                    example: The requested resource was not found
-              message:
-                description: Top-level error message (present in some error responses)
-                type: string
-                example: Internal Server Error
-            required:
-            - error
+    ConsumerRequiredSample:
+      summary: Creates a consumer with only the required fields.
+      value:
+        email: john@example.com
+        first_name: John
+        last_name: Doe
   securitySchemes:
     bearerAuth:
       type: http
