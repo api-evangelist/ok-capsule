@@ -100,19 +100,6 @@ components:
       description: Return results before/after a specific record.
       schema:
         type: string
-    QueryParameters:
-      in: query
-      name: q
-      description: Use Query DSL *query_string* syntax
-      schema:
-        type: string
-    IdParameter:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-        minimum: 1
     LimitParameters:
       in: query
       name: limit
@@ -122,6 +109,19 @@ components:
         type: integer
         minimum: 1
         maximum: 250
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
     SortByParameters:
       in: query
       name: sort_by

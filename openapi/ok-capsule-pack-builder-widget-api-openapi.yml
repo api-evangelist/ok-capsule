@@ -194,21 +194,84 @@ paths:
                 $ref: '#/components/schemas/ErrorModel'
           description: Error response.
 components:
-  parameters:
-    CursorParameters:
-      in: query
-      name: cursor
-      description: Return results before/after a specific record.
-      schema:
-        type: string
-    IdParameter:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-        minimum: 1
   schemas:
+    PackBuilderCategoriesProducts:
+      allOf:
+      - type: object
+        required:
+        - id
+        - client_id
+        - product_line
+        - category_name
+        - products
+        properties:
+          id:
+            type: string
+            format: uuid
+            example: d290f1ee-6c54-4b01-90e6-d701748f0851
+          category_name:
+            type: string
+            example: Energy
+          products:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: d290f1ee-6c54-4b01-90e6-d701748f0851
+                client_product_id:
+                  type: string
+                  format: uuid
+                  example: c5cbabe9-6ec9-4f1e-84a3-11cdd691cd95
+                product_id:
+                  type: string
+                  format: uuid
+                  example: 28a3c700-a794-4ba9-9690-6d91ecc9b36e
+                name:
+                  type: string
+                price_per_pill:
+                  type: number
+                description:
+                  type: string
+                image:
+                  type: string
+                  example: ''
+                time_of_administration:
+                  type: string
+                  enum:
+                  - Morning
+                  - Midday
+                  - Evening
+                  example: Morning
+                serving_size:
+                  type: integer
+                  example: 1
+                pill_type:
+                  type: string
+                  example: Capsule(s)
+                product_status:
+                  type: string
+                  example: active
+                client_product_active:
+                  type: boolean
+                  example: true
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
     PackBuilderWidget:
       allOf:
       - type: object
@@ -533,6 +596,40 @@ components:
           example: Internal Server Error
       required:
       - error
+    PackBuilderCategoryWidget:
+      allOf:
+      - type: object
+        required:
+        - id
+        - client_id
+        - product_line
+        - category_name
+        properties:
+          id:
+            type: string
+            format: uuid
+            example: 69d58301-84c2-447d-9064-3326d14beed7
+          category_name:
+            type: string
+            example: Energy
+          position:
+            type: number
+            example: 2
+      - type: object
+        required:
+        - created_at
+        - updated_at
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
+          updated_at:
+            type: string
+            format: date-time
+            readOnly: true
+            example: '2023-03-20T09:12:28Z'
     ValidationError:
       type: object
       title: Validation Error
@@ -618,117 +715,20 @@ components:
           prev_cursor:
             type: string
             example: eyJmb3J3YXJkIjpmYWxzZSwib3JkZXIiOlsiY3JlYXRlZF9hdCIsIkRFU0MiXSwicGFnZV9pbmZvIjpbeyJmaWVsZCI6ImNyZWF0ZWRfYXQiLCJ2YWx1ZSI6IjIwMjEtMDUtMTdUMjA6MTg6NTguMDAwWiIsInBvc2l0aW9uIjoxLCJjdXN0b21MaXRlcmFsIjoiY2xpZW50X3Byb2R1Y3RcIi5cImNyZWF0ZWRfYXQifSx7ImZpZWxkIjoiaWQiLCJ2YWx1ZSI6IjNhYjkyMGU2LTlkNTktNGYzMy1hZWEwLTUwNDVmNzI2ZGFmYiIsInBvc2l0aW9uIjowLCJjdXN0b21MaXRlcmFsIjoiY2xpZW50X3Byb2R1Y3RcIi5cImlkIn1dfQ==
-    PackBuilderCategoriesProducts:
-      allOf:
-      - type: object
-        required:
-        - id
-        - client_id
-        - product_line
-        - category_name
-        - products
-        properties:
-          id:
-            type: string
-            format: uuid
-            example: d290f1ee-6c54-4b01-90e6-d701748f0851
-          category_name:
-            type: string
-            example: Energy
-          products:
-            type: array
-            items:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                  example: d290f1ee-6c54-4b01-90e6-d701748f0851
-                client_product_id:
-                  type: string
-                  format: uuid
-                  example: c5cbabe9-6ec9-4f1e-84a3-11cdd691cd95
-                product_id:
-                  type: string
-                  format: uuid
-                  example: 28a3c700-a794-4ba9-9690-6d91ecc9b36e
-                name:
-                  type: string
-                price_per_pill:
-                  type: number
-                description:
-                  type: string
-                image:
-                  type: string
-                  example: ''
-                time_of_administration:
-                  type: string
-                  enum:
-                  - Morning
-                  - Midday
-                  - Evening
-                  example: Morning
-                serving_size:
-                  type: integer
-                  example: 1
-                pill_type:
-                  type: string
-                  example: Capsule(s)
-                product_status:
-                  type: string
-                  example: active
-                client_product_active:
-                  type: boolean
-                  example: true
-      - type: object
-        required:
-        - created_at
-        - updated_at
-        properties:
-          created_at:
-            type: string
-            format: date-time
-            readOnly: true
-            example: '2023-03-20T09:12:28Z'
-          updated_at:
-            type: string
-            format: date-time
-            readOnly: true
-            example: '2023-03-20T09:12:28Z'
-    PackBuilderCategoryWidget:
-      allOf:
-      - type: object
-        required:
-        - id
-        - client_id
-        - product_line
-        - category_name
-        properties:
-          id:
-            type: string
-            format: uuid
-            example: 69d58301-84c2-447d-9064-3326d14beed7
-          category_name:
-            type: string
-            example: Energy
-          position:
-            type: number
-            example: 2
-      - type: object
-        required:
-        - created_at
-        - updated_at
-        properties:
-          created_at:
-            type: string
-            format: date-time
-            readOnly: true
-            example: '2023-03-20T09:12:28Z'
-          updated_at:
-            type: string
-            format: date-time
-            readOnly: true
-            example: '2023-03-20T09:12:28Z'
+  parameters:
+    CursorParameters:
+      in: query
+      name: cursor
+      description: Return results before/after a specific record.
+      schema:
+        type: string
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
   securitySchemes:
     bearerAuth:
       type: http

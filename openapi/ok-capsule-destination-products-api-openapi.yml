@@ -121,6 +121,21 @@ components:
       schema:
         type: string
         minimum: 1
+  examples:
+    DestinationProductsSingleSample:
+      summary: Sync single client product.
+      value:
+        action: CREATE
+        product_ids:
+        - d290f1ee-6c54-4b01-90e6-d701748f0851
+    DestinationProductsMultiSample:
+      summary: Sync multiple client products.
+      value:
+        action: CREATE
+        product_ids:
+        - d290f1ee-6c54-4b01-90e6-d701748f0851
+        - e640d058-ecda-4f48-ba2f-c0a59804f36f
+        - a390f1ab-6c54-4b01-90e6-d701748f1837
   responses:
     UnknownError:
       description: Error response.
@@ -188,21 +203,6 @@ components:
                       description: The Joi validation type that failed.
                       type: string
                       example: any.required
-  examples:
-    DestinationProductsSingleSample:
-      summary: Sync single client product.
-      value:
-        action: CREATE
-        product_ids:
-        - d290f1ee-6c54-4b01-90e6-d701748f0851
-    DestinationProductsMultiSample:
-      summary: Sync multiple client products.
-      value:
-        action: CREATE
-        product_ids:
-        - d290f1ee-6c54-4b01-90e6-d701748f0851
-        - e640d058-ecda-4f48-ba2f-c0a59804f36f
-        - a390f1ab-6c54-4b01-90e6-d701748f1837
   schemas:
     DestinationProduct:
       allOf:

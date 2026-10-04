@@ -196,15 +196,24 @@ paths:
                 $ref: '#/components/schemas/ErrorModel'
           description: Error response.
 components:
+  examples:
+    PackBuilderMultipleAddSingleProductSample:
+      summary: Add single client product.
+      value:
+        client_product_ids:
+        - d290f1ee-6c54-4b01-90e6-d701748f0851
+    PackBuilderProductSample:
+      summary: Create pack builder client product.
+      value:
+        client_product_id: 6d28a691-1d4c-48fb-8c18-23e3557b1e05
+    PackBuilderMultipleAddProductsSample:
+      summary: Add multiple client products.
+      value:
+        client_product_ids:
+        - d290f1ee-6c54-4b01-90e6-d701748f0851
+        - e640d058-ecda-4f48-ba2f-c0a59804f36f
+        - a390f1ab-6c54-4b01-90e6-d701748f1837
   schemas:
-    SyncProcessResponse:
-      allOf:
-      - type: object
-        properties:
-          sync_process_id:
-            type: string
-            format: uuid
-            example: a390f1ab-6c54-4b01-90e6-d701748f1837
     PackBuilderProduct:
       allOf:
       - type: object
@@ -271,9 +280,23 @@ components:
           example: Internal Server Error
       required:
       - error
+    SyncProcessResponse:
+      allOf:
+      - type: object
+        properties:
+          sync_process_id:
+            type: string
+            format: uuid
+            example: a390f1ab-6c54-4b01-90e6-d701748f1837
+  parameters:
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
   responses:
-    204ConfirmDeletion:
-      description: Confirms resource deletion.
     UnknownError:
       description: Error response.
       content:
@@ -306,6 +329,8 @@ components:
                 example: Internal Server Error
             required:
             - error
+    204ConfirmDeletion:
+      description: Confirms resource deletion.
     422ValidationError:
       description: Validation error response.
       content:
@@ -340,31 +365,6 @@ components:
                       description: The Joi validation type that failed.
                       type: string
                       example: any.required
-  examples:
-    PackBuilderMultipleAddProductsSample:
-      summary: Add multiple client products.
-      value:
-        client_product_ids:
-        - d290f1ee-6c54-4b01-90e6-d701748f0851
-        - e640d058-ecda-4f48-ba2f-c0a59804f36f
-        - a390f1ab-6c54-4b01-90e6-d701748f1837
-    PackBuilderMultipleAddSingleProductSample:
-      summary: Add single client product.
-      value:
-        client_product_ids:
-        - d290f1ee-6c54-4b01-90e6-d701748f0851
-    PackBuilderProductSample:
-      summary: Create pack builder client product.
-      value:
-        client_product_id: 6d28a691-1d4c-48fb-8c18-23e3557b1e05
-  parameters:
-    IdParameter:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-        minimum: 1
   securitySchemes:
     bearerAuth:
       type: http

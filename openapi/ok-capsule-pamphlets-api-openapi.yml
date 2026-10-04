@@ -119,23 +119,6 @@ paths:
                 $ref: '#/components/schemas/ErrorModel'
           description: Error response.
 components:
-  parameters:
-    OrderLineIdParameter:
-      in: path
-      name: orderLineId
-      required: true
-      schema:
-        format: uuid
-        type: string
-    FormatParameter:
-      in: query
-      name: format
-      required: true
-      schema:
-        type: string
-        enum:
-        - pdf
-        - html
   schemas:
     ErrorModel:
       title: Error Model
@@ -165,6 +148,23 @@ components:
           example: Internal Server Error
       required:
       - error
+  parameters:
+    FormatParameter:
+      in: query
+      name: format
+      required: true
+      schema:
+        type: string
+        enum:
+        - pdf
+        - html
+    OrderLineIdParameter:
+      in: path
+      name: orderLineId
+      required: true
+      schema:
+        format: uuid
+        type: string
   securitySchemes:
     bearerAuth:
       type: http

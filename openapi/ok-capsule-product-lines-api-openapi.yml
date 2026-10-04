@@ -534,6 +534,15 @@ components:
       description: Return results before/after a specific record.
       schema:
         type: string
+    LimitParameters:
+      in: query
+      name: limit
+      description: Number of results to return. Default 50, max 250.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
     IdParameter:
       in: path
       name: id
@@ -547,15 +556,6 @@ components:
       description: Use Query DSL *query_string* syntax
       schema:
         type: string
-    LimitParameters:
-      in: query
-      name: limit
-      description: Number of results to return. Default 50, max 250.
-      required: false
-      schema:
-        type: integer
-        minimum: 1
-        maximum: 250
     SortByParameters:
       in: query
       name: sort_by
@@ -563,6 +563,34 @@ components:
       schema:
         type: string
   schemas:
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
     ProductLine:
       allOf:
       - allOf:
@@ -745,34 +773,6 @@ components:
             format: date-time
             readOnly: true
             example: '2023-03-20T09:12:28Z'
-    ErrorModel:
-      title: Error Model
-      description: An error response from the OK Capsule API
-      type: object
-      properties:
-        error:
-          title: Error Model Content
-          type: object
-          description: Error details object
-          required:
-          - message
-          properties:
-            errorCode:
-              description: For some errors that could be handled programmatically, a short string indicating the error code.
-              maxLength: 5000
-              type: string
-              example: RESOURCE_NOT_FOUND
-            message:
-              description: A human-readable message providing more details about the error.
-              maxLength: 40000
-              type: string
-              example: The requested resource was not found
-        message:
-          description: Top-level error message (present in some error responses)
-          type: string
-          example: Internal Server Error
-      required:
-      - error
     PackagingAssetGroup:
       allOf:
       - allOf:
@@ -1038,21 +1038,39 @@ components:
           count:
             type: number
             example: 8
-  examples:
-    ProductLineFullSample:
-      summary: Creates a product line with all the fields.
-      value:
-        address_id: 14ae0a8b-f2fa-436c-b652-69a88117df46
-        shipping_notification_email: house@example.com
-        description: Healthiest supplements in the lands between.
-        name: Akeso
-        display_name: Akeso Supplements
-        send_tracking_to_client_shipping_contact: true
-        send_tracking_to_consumer: true
-        box_color: string
-        sticker_finish: string
-        default_packaging_asset_group_id: c6de9100-e8b2-4032-80e2-3743deda83d2
   responses:
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
     422ValidationError:
       description: Validation error response.
       content:
@@ -1087,38 +1105,20 @@ components:
                       description: The Joi validation type that failed.
                       type: string
                       example: any.required
-    UnknownError:
-      description: Error response.
-      content:
-        application/json:
-          schema:
-            title: Error Model
-            description: An error response from the OK Capsule API
-            type: object
-            properties:
-              error:
-                title: Error Model Content
-                type: object
-                description: Error details object
-                required:
-                - message
-                properties:
-                  errorCode:
-                    description: For some errors that could be handled programmatically, a short string indicating the error code.
-                    maxLength: 5000
-                    type: string
-                    example: RESOURCE_NOT_FOUND
-                  message:
-                    description: A human-readable message providing more details about the error.
-                    maxLength: 40000
-                    type: string
-                    example: The requested resource was not found
-              message:
-                description: Top-level error message (present in some error responses)
-                type: string
-                example: Internal Server Error
-            required:
-            - error
+  examples:
+    ProductLineFullSample:
+      summary: Creates a product line with all the fields.
+      value:
+        address_id: 14ae0a8b-f2fa-436c-b652-69a88117df46
+        shipping_notification_email: house@example.com
+        description: Healthiest supplements in the lands between.
+        name: Akeso
+        display_name: Akeso Supplements
+        send_tracking_to_client_shipping_contact: true
+        send_tracking_to_consumer: true
+        box_color: string
+        sticker_finish: string
+        default_packaging_asset_group_id: c6de9100-e8b2-4032-80e2-3743deda83d2
   securitySchemes:
     bearerAuth:
       type: http

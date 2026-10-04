@@ -694,127 +694,35 @@ paths:
                 $ref: '#/components/schemas/ErrorModel'
           description: Error response.
 components:
-  examples:
-    PackBuilderSettingsSample:
-      summary: Create pack builder settings.
-      value:
-        category_settings:
-          enable_product_categories: true
-          category_selection_behavior: scroll
-          category_menu_selection_behavior: bold
-          category_menu_text_align: left
-        visual_settings:
-          layout:
-            product_view: grid
-            screen_width: fixed
-            drawer_settings: permanent
-            modal_mode: basic
-            override: true
-          product_cards:
-            image_aspect_ratio: '1:1'
-            image_corners: square
-            cycle_length: 7
-            show_icon_labels: true
-            cart_item_spacing_style: compact
-            override: true
-          typography:
-            text_size: medium
-            header_font:
-              font_family: Open Sand
-              font_weight: bold
-            body_font:
-              font_family: Open Sand
-              font_weight: regular
-            link_style: underline
-            override: false
-          colors:
-            primary_fill: '#000000'
-            secondary_fill: '#000000'
-            buttons: '#000000'
-            icons: '#000000'
-            header_text: '#000000'
-            body_text: '#000000'
-            links: '#000000'
-            dividers: '#000000'
-            override: true
-          buttons:
-            corner_style: round
-            ripple_effect: false
-            checkout_button_text: ''
-            override: false
-          copy:
-            empty_cart_message: ''
-            error_message: ''
-  responses:
-    204ConfirmDeletion:
-      description: Confirms resource deletion.
-    UnknownError:
-      description: Error response.
-      content:
-        application/json:
-          schema:
-            title: Error Model
-            description: An error response from the OK Capsule API
-            type: object
-            properties:
-              error:
-                title: Error Model Content
-                type: object
-                description: Error details object
-                required:
-                - message
-                properties:
-                  errorCode:
-                    description: For some errors that could be handled programmatically, a short string indicating the error code.
-                    maxLength: 5000
-                    type: string
-                    example: RESOURCE_NOT_FOUND
-                  message:
-                    description: A human-readable message providing more details about the error.
-                    maxLength: 40000
-                    type: string
-                    example: The requested resource was not found
-              message:
-                description: Top-level error message (present in some error responses)
-                type: string
-                example: Internal Server Error
-            required:
-            - error
-    422ValidationError:
-      description: Validation error response.
-      content:
-        application/json:
-          schema:
-            type: object
-            title: Validation Error
-            required:
-            - message
-            - errors
-            description: A validation error response from the OK Capsule API (Joi validation)
-            properties:
-              message:
-                description: A human-readable message indicating a validation error occurred.
-                maxLength: 40000
-                type: string
-                example: Validation error
-              errors:
-                description: An array of validation errors from Joi schema validation
-                type: array
-                items:
-                  type: object
-                  required:
-                  - message
-                  - type
-                  properties:
-                    message:
-                      description: A human-readable message providing more details about the validation error.
-                      type: string
-                      example: '''business_name'' is required'
-                    type:
-                      description: The Joi validation type that failed.
-                      type: string
-                      example: any.required
   schemas:
+    ErrorModel:
+      title: Error Model
+      description: An error response from the OK Capsule API
+      type: object
+      properties:
+        error:
+          title: Error Model Content
+          type: object
+          description: Error details object
+          required:
+          - message
+          properties:
+            errorCode:
+              description: For some errors that could be handled programmatically, a short string indicating the error code.
+              maxLength: 5000
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              description: A human-readable message providing more details about the error.
+              maxLength: 40000
+              type: string
+              example: The requested resource was not found
+        message:
+          description: Top-level error message (present in some error responses)
+          type: string
+          example: Internal Server Error
+      required:
+      - error
     PackBuilderSetting:
       allOf:
       - type: object
@@ -1110,34 +1018,6 @@ components:
             format: date-time
             readOnly: true
             example: '2023-03-20T09:12:28Z'
-    ErrorModel:
-      title: Error Model
-      description: An error response from the OK Capsule API
-      type: object
-      properties:
-        error:
-          title: Error Model Content
-          type: object
-          description: Error details object
-          required:
-          - message
-          properties:
-            errorCode:
-              description: For some errors that could be handled programmatically, a short string indicating the error code.
-              maxLength: 5000
-              type: string
-              example: RESOURCE_NOT_FOUND
-            message:
-              description: A human-readable message providing more details about the error.
-              maxLength: 40000
-              type: string
-              example: The requested resource was not found
-        message:
-          description: Top-level error message (present in some error responses)
-          type: string
-          example: Internal Server Error
-      required:
-      - error
     ValidationError:
       type: object
       title: Validation Error
@@ -1176,6 +1056,126 @@ components:
       schema:
         type: string
         minimum: 1
+  responses:
+    UnknownError:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            title: Error Model
+            description: An error response from the OK Capsule API
+            type: object
+            properties:
+              error:
+                title: Error Model Content
+                type: object
+                description: Error details object
+                required:
+                - message
+                properties:
+                  errorCode:
+                    description: For some errors that could be handled programmatically, a short string indicating the error code.
+                    maxLength: 5000
+                    type: string
+                    example: RESOURCE_NOT_FOUND
+                  message:
+                    description: A human-readable message providing more details about the error.
+                    maxLength: 40000
+                    type: string
+                    example: The requested resource was not found
+              message:
+                description: Top-level error message (present in some error responses)
+                type: string
+                example: Internal Server Error
+            required:
+            - error
+    204ConfirmDeletion:
+      description: Confirms resource deletion.
+    422ValidationError:
+      description: Validation error response.
+      content:
+        application/json:
+          schema:
+            type: object
+            title: Validation Error
+            required:
+            - message
+            - errors
+            description: A validation error response from the OK Capsule API (Joi validation)
+            properties:
+              message:
+                description: A human-readable message indicating a validation error occurred.
+                maxLength: 40000
+                type: string
+                example: Validation error
+              errors:
+                description: An array of validation errors from Joi schema validation
+                type: array
+                items:
+                  type: object
+                  required:
+                  - message
+                  - type
+                  properties:
+                    message:
+                      description: A human-readable message providing more details about the validation error.
+                      type: string
+                      example: '''business_name'' is required'
+                    type:
+                      description: The Joi validation type that failed.
+                      type: string
+                      example: any.required
+  examples:
+    PackBuilderSettingsSample:
+      summary: Create pack builder settings.
+      value:
+        category_settings:
+          enable_product_categories: true
+          category_selection_behavior: scroll
+          category_menu_selection_behavior: bold
+          category_menu_text_align: left
+        visual_settings:
+          layout:
+            product_view: grid
+            screen_width: fixed
+            drawer_settings: permanent
+            modal_mode: basic
+            override: true
+          product_cards:
+            image_aspect_ratio: '1:1'
+            image_corners: square
+            cycle_length: 7
+            show_icon_labels: true
+            cart_item_spacing_style: compact
+            override: true
+          typography:
+            text_size: medium
+            header_font:
+              font_family: Open Sand
+              font_weight: bold
+            body_font:
+              font_family: Open Sand
+              font_weight: regular
+            link_style: underline
+            override: false
+          colors:
+            primary_fill: '#000000'
+            secondary_fill: '#000000'
+            buttons: '#000000'
+            icons: '#000000'
+            header_text: '#000000'
+            body_text: '#000000'
+            links: '#000000'
+            dividers: '#000000'
+            override: true
+          buttons:
+            corner_style: round
+            ripple_effect: false
+            checkout_button_text: ''
+            override: false
+          copy:
+            empty_cart_message: ''
+            error_message: ''
   securitySchemes:
     bearerAuth:
       type: http

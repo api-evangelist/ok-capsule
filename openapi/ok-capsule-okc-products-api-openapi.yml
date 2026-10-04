@@ -664,19 +664,6 @@ components:
       description: Return results before/after a specific record.
       schema:
         type: string
-    QueryParameters:
-      in: query
-      name: q
-      description: Use Query DSL *query_string* syntax
-      schema:
-        type: string
-    IdParameter:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-        minimum: 1
     LimitParameters:
       in: query
       name: limit
@@ -686,6 +673,19 @@ components:
         type: integer
         minimum: 1
         maximum: 250
+    IdParameter:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        minimum: 1
+    QueryParameters:
+      in: query
+      name: q
+      description: Use Query DSL *query_string* syntax
+      schema:
+        type: string
     SortByParameters:
       in: query
       name: sort_by
@@ -721,43 +721,6 @@ components:
           example: Internal Server Error
       required:
       - error
-    ValidationError:
-      type: object
-      title: Validation Error
-      required:
-      - message
-      - errors
-      description: A validation error response from the OK Capsule API (Joi validation)
-      properties:
-        message:
-          description: A human-readable message indicating a validation error occurred.
-          maxLength: 40000
-          type: string
-          example: Validation error
-        errors:
-          description: An array of validation errors from Joi schema validation
-          type: array
-          items:
-            type: object
-            required:
-            - message
-            - type
-            properties:
-              message:
-                description: A human-readable message providing more details about the validation error.
-                type: string
-                example: '''business_name'' is required'
-              type:
-                description: The Joi validation type that failed.
-                type: string
-                example: any.required
-    Count:
-      allOf:
-      - type: object
-        properties:
-          count:
-            type: number
-            example: 8
     OkcProduct:
       allOf:
       - allOf:
@@ -964,59 +927,43 @@ components:
             format: date-time
             readOnly: true
             example: '2023-03-20T09:12:28Z'
-  examples:
-    OkcProductSample:
-      summary: Creates an OKC product with only the required fields.
-      value:
-        available_quantity: 10
-        fda_disclaimer: Disclaimer
-    OkcProductSampleComplete:
-      summary: Creates an OKC product.
-      value:
-        erp_id: AIP012345
-        available_quantity: 154
-        active: true
-        contains_no: ''
-        dosage: ''
-        fda_disclaimer: ''
-        has_product_level_prop_65_warning: false
-        height: 0
-        image_url: https://store.com/product.jpg
-        ingredient_warnings: ''
-        is_third_party: false
-        key_points: ''
-        length: ''
-        long_description: ''
-        max_serving_size_limit: '0'
-        msrp: 0
-        msrp_30_day_roll: 882
-        name: MaskC Anti Inflamatory FP
-        display_name: MaskC Anti Inflamatory FP
-        not_to_be_used_by: ''
-        pill_type: ''
-        price_30_day_roll: ''
-        price_per_pill: ''
-        product_family: Manufactured
-        product_level_prop_65_warning_text: ''
-        product_sku: ''
-        product_structure_function_claims: ''
-        product_type: simple
-        product_warnings: ''
-        score_total: ''
-        serving_size: 1
-        sfp_notes: ''
-        sfp_url: ''
-        short_description: ''
-        suggested_use: ''
-        supplement_category: ''
-        supplement_markup_percentage: ''
-        supplement_type: ''
-        time_of_administration: Morning
-        weight: 0.11
-        width: 0.14
-        warehouse_id: WH001-478
-        other_ingredients: ''
-        crm_id: 01t4P00000Bgk3wQAB
+    ValidationError:
+      type: object
+      title: Validation Error
+      required:
+      - message
+      - errors
+      description: A validation error response from the OK Capsule API (Joi validation)
+      properties:
+        message:
+          description: A human-readable message indicating a validation error occurred.
+          maxLength: 40000
+          type: string
+          example: Validation error
+        errors:
+          description: An array of validation errors from Joi schema validation
+          type: array
+          items:
+            type: object
+            required:
+            - message
+            - type
+            properties:
+              message:
+                description: A human-readable message providing more details about the validation error.
+                type: string
+                example: '''business_name'' is required'
+              type:
+                description: The Joi validation type that failed.
+                type: string
+                example: any.required
+    Count:
+      allOf:
+      - type: object
+        properties:
+          count:
+            type: number
+            example: 8
   responses:
     UnknownError:
       description: Error response.
@@ -1084,6 +1031,59 @@ components:
                       description: The Joi validation type that failed.
                       type: string
                       example: any.required
+  examples:
+    OkcProductSampleComplete:
+      summary: Creates an OKC product.
+      value:
+        erp_id: AIP012345
+        available_quantity: 154
+        active: true
+        contains_no: ''
+        dosage: ''
+        fda_disclaimer: ''
+        has_product_level_prop_65_warning: false
+        height: 0
+        image_url: https://store.com/product.jpg
+        ingredient_warnings: ''
+        is_third_party: false
+        key_points: ''
+        length: ''
+        long_description: ''
+        max_serving_size_limit: '0'
+        msrp: 0
+        msrp_30_day_roll: 882
+        name: MaskC Anti Inflamatory FP
+        display_name: MaskC Anti Inflamatory FP
+        not_to_be_used_by: ''
+        pill_type: ''
+        price_30_day_roll: ''
+        price_per_pill: ''
+        product_family: Manufactured
+        product_level_prop_65_warning_text: ''
+        product_sku: ''
+        product_structure_function_claims: ''
+        product_type: simple
+        product_warnings: ''
+        score_total: ''
+        serving_size: 1
+        sfp_notes: ''
+        sfp_url: ''
+        short_description: ''
+        suggested_use: ''
+        supplement_category: ''
+        supplement_markup_percentage: ''
+        supplement_type: ''
+        time_of_administration: Morning
+        weight: 0.11
+        width: 0.14
+        warehouse_id: WH001-478
+        other_ingredients: ''
+        crm_id: 01t4P00000Bgk3wQAB
+    OkcProductSample:
+      summary: Creates an OKC product with only the required fields.
+      value:
+        available_quantity: 10
+        fda_disclaimer: Disclaimer
   securitySchemes:
     bearerAuth:
       type: http
