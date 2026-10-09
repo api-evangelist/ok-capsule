@@ -201,3 +201,33 @@ published_limitations:
 - The scope list is not final and will grow.
 - No unattended sessions beyond the 30-day refresh window.
 - Embedded UI cards do not render in every MCP client.
+rfc9728:
+  endpoint: https://storefront.okcapsule.app/mcp
+  metadata_url: https://storefront.okcapsule.app/.well-known/oauth-protected-resource/mcp
+  discovered_via: WWW-Authenticate resource_metadata on an anonymous POST initialize
+  fetched: '2026-09-25'
+  http_status: 200
+  content_type: application/json
+  document:
+    resource: https://storefront.okcapsule.app/mcp
+    authorization_servers:
+    - https://storefront.okcapsule.app
+    scopes_supported:
+    - catalog:read
+    - recommendations:read
+    - orders:read
+    - orders:write
+    - orders:cancel
+    - consumers:read
+    - consumers:write
+    - consumers:delete
+    - fulfillments:read
+    - meta:read
+    - documents:write
+    - orders:read:own
+    - orders:write:own
+    - orders:cancel:own
+    - profile:read:own
+    - profile:write:own
+    bearer_methods_supported:
+    - header
