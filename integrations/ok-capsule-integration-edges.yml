@@ -1,0 +1,16 @@
+generated: '2026-10-12'
+method: none
+source:
+- https://zapier.com/apps/ok-capsule/integrations
+- https://n8n.io/integrations/ok-capsule/
+- https://composio.dev/toolkits/ok-capsule
+- https://monid.ai/tools/ok-capsule
+checked:
+- https://composio.dev/toolkits/ok-capsule
+- https://monid.ai/tools/ok-capsule
+- https://n8n.io/integrations/ok-capsule/
+- https://zapier.com/apps/ok-capsule/integrations
+summary: null
+marketplace_apps: []
+edges: []
+templates: []
